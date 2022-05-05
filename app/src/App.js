@@ -2,6 +2,7 @@ import React from "react";
 import "./App.css";
 import Canvas from "./Canvas";
 import myData from "./data.json";
+import settings from "./Settings";
 
 const draw = (context) => {
   var img = new Image();
@@ -17,7 +18,8 @@ class App extends React.Component {
     this.handleMouseMove = this.handleMouseMove.bind(this);
     this.handleClick = this.handleClick.bind(this);
     this.handleRecord = this.handleRecord.bind(this);
-    this.state = { x: 0, y: 0, recording: false };
+    this.state = { x: 0, y: 0 };
+    settings.recording = false;
   }
 
   handleMouseMove(event) {
@@ -34,12 +36,13 @@ class App extends React.Component {
     });
     console.log("Mouse clicked (" + this.state.x + ", " + this.state.y + ")");
     if (
-      self.state.recording &&
+      settings.recording &&
       this.state.x >= 0 &&
       this.state.x <= 1920 &&
       this.state.y >= 0 &&
       this.state.y <= 1080
     ) {
+      console.log("Keypress sent to Fast API");
       const date = new Date();
       let timestamp = date.toISOString();
       let input_code = "click(x=" + this.state.x + ", y=" + this.state.y + ")";
@@ -69,13 +72,8 @@ class App extends React.Component {
 
   handleKeyPress(event) {
     console.log("Key pressed: " + event.key);
-    if (
-      self.state.recording &&
-      this.state.x >= 0 &&
-      this.state.x <= 1920 &&
-      this.state.y >= 0 &&
-      this.state.y <= 1080
-    ) {
+    if (settings.recording) {
+      console.log("Keypress sent to Fast API");
       const date = new Date();
       let timestamp = date.toISOString();
       let input_code = "keypress(" + event.key + ")";
@@ -104,10 +102,8 @@ class App extends React.Component {
   }
 
   handleRecord(event) {
-    this.setState({
-      recording: !this.state.recording,
-    });
-    console.log("Recording: " + this.state.recording);
+    settings.recording = !settings.recording;
+    console.log("Recording: " + settings.recording);
   }
 
   componentDidMount() {
