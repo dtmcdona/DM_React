@@ -4,12 +4,45 @@ import Canvas from "./Canvas";
 import myData from "./data.json";
 import settings from "./Settings";
 
+var image_data = myData;
+
 const draw = (context) => {
-  var img = new Image();
-  img.onload = function () {
-    context.drawImage(img, 0, 0, img.width / 2, img.height / 2);
-  };
-  img.src = myData.image;
+  if (settings.screenshare_timer > 0) {
+    settings.screenshare_timer--;
+    var img = new Image();
+    img.onload = function () {
+      context.drawImage(img, 0, 0, img.width / 2, img.height / 2);
+    };
+    img.src = image_data.data;
+  } else {
+    let refresh_rate = 10 / settings.screenshare_fps;
+    var url = "http://127.0.0.1:8002/screenshot/";
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", url);
+
+    xhr.setRequestHeader("Accept", "application/json");
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
+
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4) {
+        console.log(xhr.status);
+        console.log(xhr.responseText);
+        let prefix = "data:image/png;base64,";
+        let raw_data = JSON.parse(xhr.responseText);
+        image_data.data = prefix + raw_data.data;
+        console.log(image_data.data);
+        var img = new Image();
+        img.onload = function () {
+          context.drawImage(img, 0, 0, img.width / 2, img.height / 2);
+        };
+        img.src = image_data.data;
+      }
+    };
+    xhr.send();
+    settings.screenshare_timer = refresh_rate;
+  }
 };
 
 class App extends React.Component {

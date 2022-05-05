@@ -1,5 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
+
 const Canvas = ({ draw, width, height }) => {
   const canvas = React.useRef();
   React.useEffect(() => {
