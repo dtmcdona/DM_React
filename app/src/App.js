@@ -1,13 +1,14 @@
 import React from "react";
 import "./App.css";
 import Canvas from "./Canvas";
+import myData from "./data.json";
 
 const draw = (context) => {
   var img = new Image();
   img.onload = function () {
     context.drawImage(img, 0, 0, img.width / 2, img.height / 2);
   };
-  img.src = "screenshot.jpg";
+  img.src = myData.image;
 };
 
 class App extends React.Component {
