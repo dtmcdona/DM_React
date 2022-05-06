@@ -1,6 +1,35 @@
 const settings = {
+  schedule_name: "default_schedule",
+  task_name: "default_task",
+  task_action_list: [],
+  export_ext: ".py",
   recording: false,
-  screenshare_fps: 1,
-  screenshare_timer: 10,
+  playback: false,
+  random_enabled: true,
+  random: {
+    mouse_path: true,
+    mouse_position: true,
+    mouse_range: 4,
+    mouse_delay: true,
+    mouse_max_delay: 0.5,
+    keyboard_delay: true,
+    keyboard_max_delay: 0.5,
+  },
+  record_mouse_movement: false,
+  mouse_info: {
+    previous_x: 0,
+    previous_y: 0,
+    current_x: 0,
+    current_y: 0,
+  },
+  screen: {
+    width: 1920,
+    height: 1080,
+    x_scale: 0.5,
+    y_scale: 0.5,
+    fps: 1,
+    timer: 10,
+    timer_max: 10,
+  },
 };
 export default settings;
