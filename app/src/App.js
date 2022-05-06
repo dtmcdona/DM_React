@@ -1,27 +1,28 @@
 import React from "react";
 import "./App.css";
 import Canvas from "./Canvas";
+import Menu from "./Menu";
 import myData from "./data.json";
 import settings from "./Settings";
 
 var image_data = myData;
 
 const draw = (context) => {
-  if (settings.screen.timer > 0) {
-    settings.screen.timer--;
+  if (settings.screen_timer > 0) {
+    settings.screen_timer--;
     var img = new Image();
     img.onload = function () {
       context.drawImage(
         img,
         0,
         0,
-        img.width * settings.screen.x_scale,
-        img.height * settings.screen.y_scale
+        img.width * settings.screen_x_scale,
+        img.height * settings.screen_y_scale
       );
     };
     img.src = image_data.data;
   } else {
-    let refresh_rate = settings.screen.timer_max / settings.screen.fps;
+    let refresh_rate = settings.screen_timer_max / settings.screen_fps;
     var url = "http://127.0.0.1:8002/screenshot/";
 
     var xhr = new XMLHttpRequest();
@@ -45,15 +46,15 @@ const draw = (context) => {
             img,
             0,
             0,
-            img.width * settings.screen.x_scale,
-            img.height * settings.screen.y_scale
+            img.width * settings.screen_x_scale,
+            img.height * settings.screen_y_scale
           );
         };
         img.src = image_data.data;
       }
     };
     xhr.send();
-    settings.screen.timer = refresh_rate;
+    settings.screen_timer = refresh_rate;
   }
 };
 
@@ -68,44 +69,44 @@ class App extends React.Component {
   }
 
   handleMouseMove(event) {
-    let x_offset = 10 * settings.screen.x_scale;
-    let y_offset = 70 * settings.screen.y_scale;
+    let x_offset = 10 * settings.screen_x_scale;
+    let y_offset = 70 * settings.screen_y_scale;
     this.setState({
-      x: event.clientX / settings.screen.x_scale - x_offset,
-      y: event.clientY / settings.screen.y_scale - y_offset,
+      x: event.clientX / settings.screen_x_scale - x_offset,
+      y: event.clientY / settings.screen_y_scale - y_offset,
     });
   }
 
   handleClick(event) {
     this.setState({
-      x: event.clientX / settings.screen.x_scale - 10 * settings.screen.x_scale,
-      y: event.clientY / settings.screen.y_scale - 70 * settings.screen.y_scale,
+      x: event.clientX / settings.screen_x_scale - 10 * settings.screen_x_scale,
+      y: event.clientY / settings.screen_y_scale - 70 * settings.screen_y_scale,
     });
     console.log("Mouse clicked (" + this.state.x + ", " + this.state.y + ")");
     if (
       settings.recording &&
       this.state.x >= 0 &&
-      this.state.x <= settings.screen.width &&
+      this.state.x <= settings.screen_width &&
       this.state.y >= 0 &&
-      this.state.y <= settings.screen.height
+      this.state.y <= settings.screen_height
     ) {
       console.log("Mouse click sent to Fast API");
       const date = new Date();
       let timestamp = date.toISOString();
       let input_code = "click(x=" + this.state.x + ", y=" + this.state.y;
       if (settings.random_enabled) {
-        if (settings.random.mouse_path) {
+        if (settings.random_mouse_path) {
           let temp = input_code;
           input_code = temp + ", random_path=true";
         }
-        if (settings.random.mouse_position) {
+        if (settings.random_mouse_position) {
           let temp = input_code;
-          input_code = temp + ", random_range=" + settings.random.mouse_range;
+          input_code = temp + ", random_range=" + settings.random_mouse_range;
         }
-        if (settings.random.mouse_delay) {
+        if (settings.random_mouse_delay) {
           let temp = input_code;
           input_code =
-            temp + ", random_delay=" + settings.random.mouse_max_delay;
+            temp + ", random_delay=" + settings.random_mouse_max_delay;
         }
       }
       let temp = input_code;
@@ -137,7 +138,13 @@ class App extends React.Component {
 
   handleKeyPress(event) {
     console.log("Key pressed: " + event.key);
-    if (settings.recording) {
+    if (
+      settings.recording &&
+      this.state.x >= 0 &&
+      this.state.x <= settings.screen_width &&
+      this.state.y >= 0 &&
+      this.state.y <= settings.screen_height
+    ) {
       console.log("Keypress sent to Fast API");
       const date = new Date();
       let timestamp = date.toISOString();
@@ -214,12 +221,10 @@ class App extends React.Component {
         <div className="main--section">
           <Canvas
             draw={draw}
-            width={settings.screen.width * settings.screen.x_scale}
-            height={settings.screen.height * settings.screen.y_scale}
+            width={settings.screen_width * settings.screen_x_scale}
+            height={settings.screen_height * settings.screen_y_scale}
           />
-          <p>
-            Mouse position: ({this.state.x}, {this.state.y})
-          </p>
+          <Menu />
         </div>
       </div>
     );
