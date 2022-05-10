@@ -8,9 +8,9 @@ import settings from "./Settings";
 var image_data = myData;
 
 const draw = (context) => {
-  if (settings.screen_timer > 0) {
+  var img = new Image();
+  if (settings.streaming && settings.screen_timer > 0) {
     settings.screen_timer--;
-    var img = new Image();
     img.onload = function () {
       context.drawImage(
         img,
@@ -20,8 +20,7 @@ const draw = (context) => {
         img.height * settings.screen_y_scale
       );
     };
-    img.src = image_data.data;
-  } else {
+  } else if (settings.streaming) {
     let refresh_rate = settings.screen_timer_max / settings.screen_fps;
     var url = "http://127.0.0.1:8002/screenshot/";
 
@@ -40,7 +39,6 @@ const draw = (context) => {
         let raw_data = JSON.parse(xhr.responseText);
         image_data.data = prefix + raw_data.data;
         console.log(image_data.data);
-        var img = new Image();
         img.onload = function () {
           context.drawImage(
             img,
@@ -55,6 +53,27 @@ const draw = (context) => {
     };
     xhr.send();
     settings.screen_timer = refresh_rate;
+  } else {
+    image_data.data =
+      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAKnRFWHRDcmVhdGlvbiBUaW1lAFNhIDQgTWFpIDIwMDIgMjM6MjA6MzYgKzAxMDBC3wLLAAAAB3RJTUUH0gUEFRUrVURxbAAAAAlwSFlzAAAK8AAACvABQqw0mAAAAARnQU1BAACxjwv8YQUAAAAMSURBVHjaY+CQbQEAANoAqj1ML8MAAAAASUVORK5CYII=";
+    img.onload = function () {
+      context.drawImage(
+        img,
+        0,
+        0,
+        img.width * settings.screen_x_scale,
+        img.height * settings.screen_y_scale
+      );
+      context.font = "40pt Sans";
+      context.fillStyle = "white";
+      context.textAlign = "center";
+      context.fillText(
+        "Stream Paused",
+        (settings.screen_x_scale * settings.screen_width) / 2,
+        (settings.screen_x_scale * settings.screen_height) / 2
+      );
+    };
+    img.src = image_data.data;
   }
 };
 
@@ -65,6 +84,7 @@ class App extends React.Component {
     this.handleClick = this.handleClick.bind(this);
     this.handleRecord = this.handleRecord.bind(this);
     this.state = { x: 0, y: 0 };
+    settings.streaming = false;
     settings.recording = false;
   }
 
@@ -84,6 +104,7 @@ class App extends React.Component {
     });
     console.log("Mouse clicked (" + this.state.x + ", " + this.state.y + ")");
     if (
+      settings.streaming &&
       settings.recording &&
       this.state.x >= 0 &&
       this.state.x <= settings.screen_width &&
@@ -139,6 +160,7 @@ class App extends React.Component {
   handleKeyPress(event) {
     console.log("Key pressed: " + event.key);
     if (
+      settings.streaming &&
       settings.recording &&
       this.state.x >= 0 &&
       this.state.x <= settings.screen_width &&
@@ -173,6 +195,11 @@ class App extends React.Component {
     }
   }
 
+  handleStream(event) {
+    settings.streaming = !settings.streaming;
+    console.log("Streaming: " + settings.streaming);
+  }
+
   handleRecord(event) {
     settings.recording = !settings.recording;
     console.log("Recording: " + settings.recording);
@@ -195,6 +222,13 @@ class App extends React.Component {
         onClick={this.handleClick}
       >
         <nav>
+          <button
+            type="button"
+            onClick={this.handleStream}
+            className="nav--options"
+          >
+            Stream
+          </button>
           <button
             type="button"
             onClick={this.handleRecord}
