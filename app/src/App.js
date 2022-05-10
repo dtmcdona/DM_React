@@ -4,16 +4,18 @@ import Canvas from "./Canvas";
 import Menu from "./Menu";
 import myData from "./data.json";
 import settings from "./Settings";
+import Components from "./components.js";
 
 var image_data = myData;
 
-const action_list = [];
+var action_list = [];
 
 function Action(id, name, code) {
   var dict = {};
   dict["id"] = id;
   dict["name"] = name;
   dict["code"] = code;
+  dict["component"] = "action";
   return dict;
 }
 
@@ -278,6 +280,17 @@ class App extends React.Component {
             width={settings.screen_width * settings.screen_x_scale}
             height={settings.screen_height * settings.screen_y_scale}
           />
+          <div className="actions--section">
+            <h1>Action List</h1>
+            <table>
+              <tr>
+                <th>id</th>
+                <th>unique_name</th>
+                <th>code</th>
+              </tr>
+              {action_list.map((block) => Components(block))}
+            </table>
+          </div>
           <Menu />
         </div>
       </div>
