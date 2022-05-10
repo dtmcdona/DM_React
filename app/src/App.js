@@ -7,6 +7,16 @@ import settings from "./Settings";
 
 var image_data = myData;
 
+const action_list = [];
+
+function Action(id, name, code) {
+  var dict = {};
+  dict["id"] = id;
+  dict["name"] = name;
+  dict["code"] = code;
+  return dict;
+}
+
 const draw = (context) => {
   var img = new Image();
   if (settings.streaming && settings.screen_timer > 0) {
@@ -36,8 +46,8 @@ const draw = (context) => {
         console.log(xhr.status);
         console.log(xhr.responseText);
         let prefix = "data:image/png;base64,";
-        let raw_data = JSON.parse(xhr.responseText);
-        image_data.data = prefix + raw_data.data;
+        let json_data = JSON.parse(xhr.responseText);
+        image_data.data = prefix + json_data.data;
         console.log(image_data.data);
         img.onload = function () {
           context.drawImage(
@@ -150,6 +160,11 @@ class App extends React.Component {
         if (xhr.readyState === 4) {
           console.log(xhr.status);
           console.log(xhr.responseText);
+          let json_data = JSON.parse(xhr.responseText);
+          action_list.push(
+            new Action(json_data.id, json_data.name, json_data.code)
+          );
+          console.log(action_list);
         }
       };
 
@@ -188,6 +203,11 @@ class App extends React.Component {
         if (xhr.readyState === 4) {
           console.log(xhr.status);
           console.log(xhr.responseText);
+          let json_data = JSON.parse(xhr.responseText);
+          action_list.push(
+            new Action(json_data.id, json_data.name, json_data.code)
+          );
+          console.log(action_list);
         }
       };
 
