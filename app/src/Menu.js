@@ -72,17 +72,14 @@ class Menu extends React.Component {
     console.log(this.state);
   }
 
-  handleSubmit(event) {
-    alert("A name was submitted: " + this.state.value);
-    event.preventDefault();
-  }
-
   render() {
     return (
       <div className="menu--section">
         <form>
-          <h1>Menu</h1>
-          <table>{this.data}</table>
+          <h2>Menu</h2>
+          <table>
+            <tbody>{this.data}</tbody>
+          </table>
         </form>
       </div>
     );

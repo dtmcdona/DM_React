@@ -19,6 +19,72 @@ function Action(id, name, code) {
   return dict;
 }
 
+const execute_action = (id) => {
+  var url = "http://127.0.0.1:8002/execute-action/" + id;
+
+  var xhr = new XMLHttpRequest();
+  xhr.open("POST", url);
+
+  xhr.setRequestHeader("Accept", "application/json");
+  xhr.setRequestHeader("Content-Type", "application/json");
+  xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
+
+  xhr.onreadystatechange = function () {
+    if (xhr.readyState === 4) {
+      if (settings.logging) {
+        console.log(xhr.status);
+        console.log(xhr.responseText);
+      }
+    }
+  };
+
+  xhr.send();
+};
+
+const send_mouse_click = (x, y) => {
+  var url = "http://127.0.0.1:8002/mouse-click/" + x + "/" + y;
+
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", url);
+
+  xhr.setRequestHeader("Accept", "application/json");
+  xhr.setRequestHeader("Content-Type", "application/json");
+  xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
+
+  xhr.onreadystatechange = function () {
+    if (xhr.readyState === 4) {
+      if (settings.logging) {
+        console.log(xhr.status);
+        console.log(xhr.responseText);
+      }
+    }
+  };
+
+  xhr.send();
+};
+
+const send_keypress = (key) => {
+  var url = "http://127.0.0.1:8002/keypress/" + key;
+
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", url);
+
+  xhr.setRequestHeader("Accept", "application/json");
+  xhr.setRequestHeader("Content-Type", "application/json");
+  xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
+
+  xhr.onreadystatechange = function () {
+    if (xhr.readyState === 4) {
+      if (settings.logging) {
+        console.log(xhr.status);
+        console.log(xhr.responseText);
+      }
+    }
+  };
+
+  xhr.send();
+};
+
 const draw = (context) => {
   var img = new Image();
   if (settings.streaming && settings.screen_timer > 0) {
@@ -45,12 +111,14 @@ const draw = (context) => {
 
     xhr.onreadystatechange = function () {
       if (xhr.readyState === 4) {
-        console.log(xhr.status);
-        console.log(xhr.responseText);
         let prefix = "data:image/png;base64,";
         let json_data = JSON.parse(xhr.responseText);
         image_data.data = prefix + json_data.data;
-        console.log(image_data.data);
+        if (settings.logging) {
+          console.log(xhr.status);
+          console.log(xhr.responseText);
+          console.log(image_data.data);
+        }
         img.onload = function () {
           context.drawImage(
             img,
@@ -114,117 +182,227 @@ class App extends React.Component {
       x: event.clientX / settings.screen_x_scale - 10 * settings.screen_x_scale,
       y: event.clientY / settings.screen_y_scale - 70 * settings.screen_y_scale,
     });
-    console.log("Mouse clicked (" + this.state.x + ", " + this.state.y + ")");
+    if (settings.logging) {
+      console.log("Mouse clicked (" + this.state.x + ", " + this.state.y + ")");
+    }
+    let new_action_id = 0;
     if (
-      settings.streaming &&
-      settings.recording &&
       this.state.x >= 0 &&
       this.state.x <= settings.screen_width &&
       this.state.y >= 0 &&
       this.state.y <= settings.screen_height
     ) {
-      console.log("Mouse click sent to Fast API");
-      const date = new Date();
-      let timestamp = date.toISOString();
-      let input_code = "click(x=" + this.state.x + ", y=" + this.state.y;
-      if (settings.random_enabled) {
-        if (settings.random_mouse_path) {
-          let temp = input_code;
-          input_code = temp + ", random_path=true";
+      if (settings.streaming && settings.recording) {
+        if (settings.logging) {
+          console.log("Mouse click sent to Fast API");
         }
-        if (settings.random_mouse_position) {
-          let temp = input_code;
-          input_code = temp + ", random_range=" + settings.random_mouse_range;
+        const date = new Date();
+        let timestamp = date.toISOString();
+        let input_code = "click(x=" + this.state.x + ", y=" + this.state.y;
+        if (settings.random_enabled) {
+          if (settings.random_mouse_path) {
+            let temp = input_code;
+            input_code = temp + ", random_path=true";
+          }
+          if (settings.random_mouse_position) {
+            let temp = input_code;
+            input_code = temp + ", random_range=" + settings.random_mouse_range;
+          }
+          if (settings.random_mouse_delay) {
+            let temp = input_code;
+            input_code =
+              temp + ", random_delay=" + settings.random_mouse_max_delay;
+          }
         }
-        if (settings.random_mouse_delay) {
-          let temp = input_code;
-          input_code =
-            temp + ", random_delay=" + settings.random_mouse_max_delay;
+        let temp = input_code;
+        input_code = temp + ")";
+        if (settings.logging) {
+          console.log(input_code);
         }
+
+        let data =
+          '{"name": "' + timestamp + '", "code": ["' + input_code + '"]}';
+
+        var url = "http://127.0.0.1:8002/add-action/";
+
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", url);
+
+        xhr.setRequestHeader("Accept", "application/json");
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
+
+        xhr.onreadystatechange = function () {
+          if (xhr.readyState === 4) {
+            let json_data = JSON.parse(xhr.responseText);
+            new_action_id = json_data.id;
+            action_list.push(
+              new Action(json_data.id, json_data.name, json_data.code)
+            );
+            if (settings.logging) {
+              console.log(action_list);
+              console.log(xhr.status);
+              console.log(xhr.responseText);
+            }
+          }
+        };
+
+        xhr.send(data);
       }
-      let temp = input_code;
-      input_code = temp + ")";
-      console.log(input_code);
-
-      let data =
-        '{"name": "' + timestamp + '", "code": ["' + input_code + '"]}';
-
-      var url = "http://127.0.0.1:8002/add-action/";
-
-      var xhr = new XMLHttpRequest();
-      xhr.open("POST", url);
-
-      xhr.setRequestHeader("Accept", "application/json");
-      xhr.setRequestHeader("Content-Type", "application/json");
-      xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
-
-      xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4) {
-          console.log(xhr.status);
-          console.log(xhr.responseText);
-          let json_data = JSON.parse(xhr.responseText);
-          action_list.push(
-            new Action(json_data.id, json_data.name, json_data.code)
-          );
-          console.log(action_list);
-        }
-      };
-
-      xhr.send(data);
+      if (
+        new_action_id !== 0 &&
+        settings.streaming &&
+        settings.remote_control
+      ) {
+        execute_action(new_action_id);
+      } else if (
+        new_action_id === 0 &&
+        settings.streaming &&
+        settings.remote_control
+      ) {
+        send_mouse_click(event.clientX, event.clientY);
+      }
     }
   }
 
   handleKeyPress(event) {
-    console.log("Key pressed: " + event.key);
+    if (settings.logging) {
+      console.log("Key pressed: " + event.key);
+    }
+    let new_action_id = 0;
     if (
-      settings.streaming &&
-      settings.recording &&
       this.state.x >= 0 &&
       this.state.x <= settings.screen_width &&
       this.state.y >= 0 &&
       this.state.y <= settings.screen_height
     ) {
-      console.log("Keypress sent to Fast API");
-      const date = new Date();
-      let timestamp = date.toISOString();
-      let input_code = "keypress(" + event.key + ")";
+      if (settings.streaming && settings.recording) {
+        console.log("Keypress sent to Fast API");
+        const date = new Date();
+        let timestamp = date.toISOString();
+        let input_code = "keypress(" + event.key + ")";
 
-      let data =
-        '{"name": "' + timestamp + '", "code": ["' + input_code + '"]}';
+        let data =
+          '{"name": "' + timestamp + '", "code": ["' + input_code + '"]}';
 
-      var url = "http://127.0.0.1:8002/add-action/";
+        var url = "http://127.0.0.1:8002/add-action/";
 
-      var xhr = new XMLHttpRequest();
-      xhr.open("POST", url);
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", url);
 
-      xhr.setRequestHeader("Accept", "application/json");
-      xhr.setRequestHeader("Content-Type", "application/json");
-      xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
+        xhr.setRequestHeader("Accept", "application/json");
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
 
-      xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4) {
-          console.log(xhr.status);
-          console.log(xhr.responseText);
-          let json_data = JSON.parse(xhr.responseText);
-          action_list.push(
-            new Action(json_data.id, json_data.name, json_data.code)
-          );
-          console.log(action_list);
-        }
-      };
+        xhr.onreadystatechange = function () {
+          if (xhr.readyState === 4) {
+            let json_data = JSON.parse(xhr.responseText);
+            action_list.push(
+              new Action(json_data.id, json_data.name, json_data.code)
+            );
+            if (settings.logging) {
+              console.log(xhr.status);
+              console.log(xhr.responseText);
+              console.log(action_list);
+            }
+          }
+        };
 
-      xhr.send(data);
+        xhr.send(data);
+      }
+      if (
+        new_action_id !== 0 &&
+        settings.streaming &&
+        settings.remote_control
+      ) {
+        execute_action(new_action_id);
+      } else if (
+        new_action_id === 0 &&
+        settings.streaming &&
+        settings.remote_control
+      ) {
+        send_keypress(event.key);
+      }
     }
   }
 
   handleStream(event) {
     settings.streaming = !settings.streaming;
-    console.log("Streaming: " + settings.streaming);
+    if (settings.logging) {
+      console.log("Streaming: " + settings.streaming);
+    }
   }
 
   handleRecord(event) {
     settings.recording = !settings.recording;
-    console.log("Recording: " + settings.recording);
+    if (settings.logging) {
+      console.log("Recording: " + settings.recording);
+    }
+  }
+
+  handlePlayback(event) {
+    let prev_recording = settings.recording;
+    let prev_remote_control = settings.remote_control;
+    settings.recording = false;
+    settings.remote_control = false;
+    settings.playback = true;
+    for (let i = 0; i < action_list.length; i++) {
+      execute_action(i);
+    }
+    settings.recording = prev_recording;
+    settings.remote_control = prev_remote_control;
+    settings.playback = false;
+  }
+
+  handleRemoteControl(event) {
+    settings.remote_control = !settings.remote_control;
+    if (settings.logging) {
+      console.log("Remote Control: " + settings.remote_control);
+    }
+  }
+
+  handleDeleteAction(event) {
+    const id = parseInt(event.target.name, 10);
+    if (settings.logging) {
+      console.log("Delete action:" + id);
+    }
+    var temp_id = 0;
+    let action_deleted = false;
+    for (let i = 0; i < action_list.length; i++) {
+      if (action_list[i]["id"] === id) {
+        //console.log(action_list);
+        action_list.splice(i, 1);
+        //console.log("ID matched:" + id);
+        if (action_list.length > 0 && action_list.length > i) {
+          action_list[i]["id"] = id;
+        }
+        action_deleted = true;
+        //console.log(action_list);
+      } else if (action_deleted) {
+        temp_id = action_list[i]["id"];
+        action_list[i]["id"] = temp_id - 1;
+        //console.log("After delete: " + action_list[i]["id"]);
+      }
+    }
+    var url = "http://127.0.0.1:8002/delete-action/" + id;
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", url);
+
+    xhr.setRequestHeader("Accept", "application/json");
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
+
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4) {
+        if (settings.logging) {
+          console.log(xhr.status);
+          console.log(xhr.responseText);
+        }
+      }
+    };
+
+    xhr.send();
   }
 
   componentDidMount() {
@@ -249,23 +427,28 @@ class App extends React.Component {
             onClick={this.handleStream}
             className="nav--options"
           >
-            Stream
+            Video Stream
           </button>
           <button
             type="button"
             onClick={this.handleRecord}
             className="nav--options"
           >
-            Record
+            Record Input
           </button>
-          <button type="button" className="nav--options">
-            Playback
+          <button
+            type="button"
+            onClick={this.handleRemoteControl}
+            className="nav--options"
+          >
+            Remote Control
           </button>
-          <button type="button" className="nav--options">
-            Save
-          </button>
-          <button type="button" className="nav--options">
-            Load
+          <button
+            type="button"
+            onClick={this.handlePlayback}
+            className="nav--options"
+          >
+            Play Action List
           </button>
           <button type="button" className="nav--options">
             Add condition
@@ -281,14 +464,22 @@ class App extends React.Component {
             height={settings.screen_height * settings.screen_y_scale}
           />
           <div className="actions--section">
-            <h1>Action List</h1>
+            <h2>Action List</h2>
             <table>
-              <tr>
-                <th>id</th>
-                <th>unique_name</th>
-                <th>code</th>
-              </tr>
-              {action_list.map((block) => Components(block))}
+              <tbody>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Code</th>
+                  <th>Delete</th>
+                </tr>
+                {action_list.map((block) => (
+                  <Components
+                    block={block}
+                    delete_func={this.handleDeleteAction}
+                  />
+                ))}
+              </tbody>
             </table>
           </div>
           <Menu />

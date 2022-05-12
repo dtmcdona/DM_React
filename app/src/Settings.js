@@ -1,11 +1,12 @@
 const settings = {
   schedule_name: "default_schedule",
   task_name: "default_task",
-  task_action_list: [],
   export_extension: ".py",
   streaming: false,
   recording: false,
   playback: false,
+  logging: true,
+  remote_control: false,
   random_enabled: false,
   random_mouse_path: false,
   random_mouse_position: false,
