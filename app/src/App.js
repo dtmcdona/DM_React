@@ -347,7 +347,7 @@ class App extends React.Component {
     settings.remote_control = false;
     settings.playback = true;
     for (let i = 0; i < action_list.length; i++) {
-      execute_action(i);
+      execute_action(action_list[i].id);
     }
     settings.recording = prev_recording;
     settings.remote_control = prev_remote_control;
