@@ -427,28 +427,30 @@ class App extends React.Component {
             onClick={this.handleStream}
             className="nav--options"
           >
-            Video Stream
+            {settings.streaming ? "Stop Stream" : "Start Stream"}
           </button>
           <button
             type="button"
             onClick={this.handleRecord}
             className="nav--options"
           >
-            Record Input
+            {settings.recording ? "Stop Recording" : "Start Recording"}
           </button>
           <button
             type="button"
             onClick={this.handleRemoteControl}
             className="nav--options"
           >
-            Remote Control
+            {settings.remote_control
+              ? "Remote Control On"
+              : "Remote Control Off"}
           </button>
           <button
             type="button"
             onClick={this.handlePlayback}
             className="nav--options"
           >
-            Play Action List
+            {settings.playback ? "Stop Action List" : "Play Action List"}
           </button>
           <button type="button" className="nav--options">
             Add condition
