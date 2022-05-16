@@ -192,7 +192,60 @@ class App extends React.Component {
       this.state.y >= 0 &&
       this.state.y <= settings.screen_height
     ) {
-      if (settings.streaming && settings.recording) {
+      if (settings.snip_image) {
+        if (settings.snip_x1 === 0) {
+          settings.snip_x1 = this.state.x;
+        } else if (settings.snip_x2 === 0) {
+          settings.snip_x2 = this.state.x;
+        }
+        if (settings.snip_y1 === 0) {
+          settings.snip_y1 = this.state.y;
+        } else if (settings.snip_y2 === 0) {
+          settings.snip_y2 = this.state.y;
+        }
+        if (
+          settings.snip_x1 !== 0 &&
+          settings.snip_x2 !== 0 &&
+          settings.snip_y1 !== 0 &&
+          settings.snip_y2 !== 0
+        ) {
+          var url =
+            "http://127.0.0.1:8002/screen-snip/" +
+            settings.snip_x1 +
+            "/" +
+            settings.snip_y1 +
+            "/" +
+            settings.snip_x2 +
+            "/" +
+            settings.snip_y2 +
+            "/";
+
+          var xhr = new XMLHttpRequest();
+          xhr.open("GET", url);
+
+          xhr.setRequestHeader("Accept", "application/json");
+          xhr.setRequestHeader("Content-Type", "application/json");
+          xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
+
+          xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+              if (settings.logging) {
+                console.log("Snipped image");
+                console.log(xhr.status);
+                console.log(xhr.responseText);
+              }
+            }
+          };
+
+          xhr.send();
+
+          settings.snip_x1 = 0;
+          settings.snip_x2 = 0;
+          settings.snip_y1 = 0;
+          settings.snip_y2 = 0;
+          settings.snip_image = false;
+        }
+      } else if (settings.streaming && settings.recording) {
         if (settings.logging) {
           console.log("Mouse click sent to Fast API");
         }
@@ -223,9 +276,9 @@ class App extends React.Component {
         let data =
           '{"name": "' + timestamp + '", "code": ["' + input_code + '"]}';
 
-        var url = "http://127.0.0.1:8002/add-action/";
+        url = "http://127.0.0.1:8002/add-action/";
 
-        var xhr = new XMLHttpRequest();
+        xhr = new XMLHttpRequest();
         xhr.open("POST", url);
 
         xhr.setRequestHeader("Accept", "application/json");
@@ -361,6 +414,19 @@ class App extends React.Component {
     }
   }
 
+  handleSnipImage(event) {
+    if (!settings.snip_image) {
+      settings.snip_x1 = 0;
+      settings.snip_x2 = 0;
+      settings.snip_y1 = 0;
+      settings.snip_y2 = 0;
+    }
+    settings.snip_image = !settings.snip_image;
+    if (settings.logging) {
+      console.log("Snip Image: " + settings.snip_image);
+    }
+  }
+
   handleDeleteAction(event) {
     const id = parseInt(event.target.name, 10);
     if (settings.logging) {
@@ -451,6 +517,13 @@ class App extends React.Component {
             className="nav--options"
           >
             {settings.playback ? "Stop Action List" : "Play Action List"}
+          </button>
+          <button
+            type="button"
+            onClick={this.handleSnipImage}
+            className="nav--options"
+          >
+            Snip image
           </button>
           <button type="button" className="nav--options">
             Add condition
