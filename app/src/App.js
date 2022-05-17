@@ -4,11 +4,16 @@ import Canvas from "./Canvas";
 import Menu from "./Menu";
 import myData from "./data.json";
 import settings from "./Settings";
+import canvas_data from "./Canvas_Data";
 import Components from "./components.js";
 
 var image_data = myData;
 
 var action_list = [];
+
+var prompt = "";
+
+var block_click = true;
 
 function Action(id, name, code) {
   var dict = {};
@@ -20,9 +25,9 @@ function Action(id, name, code) {
 }
 
 const execute_action = (id) => {
-  var url = "http://127.0.0.1:8002/execute-action/" + id;
+  let url = "http://127.0.0.1:8002/execute-action/" + id;
 
-  var xhr = new XMLHttpRequest();
+  let xhr = new XMLHttpRequest();
   xhr.open("POST", url);
 
   xhr.setRequestHeader("Accept", "application/json");
@@ -42,9 +47,9 @@ const execute_action = (id) => {
 };
 
 const send_mouse_click = (x, y) => {
-  var url = "http://127.0.0.1:8002/mouse-click/" + x + "/" + y;
+  let url = "http://127.0.0.1:8002/mouse-click/" + x + "/" + y;
 
-  var xhr = new XMLHttpRequest();
+  let xhr = new XMLHttpRequest();
   xhr.open("GET", url);
 
   xhr.setRequestHeader("Accept", "application/json");
@@ -64,9 +69,9 @@ const send_mouse_click = (x, y) => {
 };
 
 const send_keypress = (key) => {
-  var url = "http://127.0.0.1:8002/keypress/" + key;
+  let url = "http://127.0.0.1:8002/keypress/" + key;
 
-  var xhr = new XMLHttpRequest();
+  let xhr = new XMLHttpRequest();
   xhr.open("GET", url);
 
   xhr.setRequestHeader("Accept", "application/json");
@@ -87,22 +92,73 @@ const send_keypress = (key) => {
 
 const draw = (context) => {
   var img = new Image();
-  if (settings.streaming && settings.screen_timer > 0) {
-    settings.screen_timer--;
+  if (canvas_data.snip_prompt_index > 0) {
+    context.clearRect(
+      0,
+      0,
+      canvas_data.screen_x_scale * canvas_data.screen_width,
+      32
+    );
+    if (canvas_data.snip_x1 !== 0 && canvas_data.snip_y1 !== 0) {
+      context.clearRect(
+        0,
+        0,
+        canvas_data.screen_x_scale * canvas_data.screen_width,
+        canvas_data.screen_y_scale * canvas_data.snip_y1
+      );
+      context.clearRect(
+        0,
+        0,
+        canvas_data.screen_x_scale * canvas_data.snip_x1,
+        canvas_data.screen_y_scale * canvas_data.screen_height
+      );
+    }
+    if (canvas_data.snip_x2 !== 0 && canvas_data.snip_y2 !== 0) {
+      context.clearRect(
+        0,
+        canvas_data.screen_y_scale * canvas_data.snip_y2,
+        canvas_data.screen_x_scale * canvas_data.screen_width,
+        canvas_data.screen_y_scale * canvas_data.screen_height
+      );
+      context.clearRect(
+        canvas_data.screen_x_scale * canvas_data.snip_x2,
+        0,
+        canvas_data.screen_x_scale * canvas_data.screen_width,
+        canvas_data.screen_y_scale * canvas_data.screen_height
+      );
+    }
+    context.drawImage(
+      img,
+      0,
+      0,
+      img.width * canvas_data.screen_x_scale,
+      img.height * canvas_data.screen_y_scale
+    );
+    img.src = canvas_data.snip_frame;
+    context.font = "20pt Sans";
+    context.fillStyle = "white";
+    context.textAlign = "center";
+    context.fillText(
+      prompt,
+      (canvas_data.screen_x_scale * canvas_data.screen_width) / 2,
+      24
+    );
+  } else if (settings.streaming && canvas_data.screen_timer > 0) {
     img.onload = function () {
       context.drawImage(
         img,
         0,
         0,
-        img.width * settings.screen_x_scale,
-        img.height * settings.screen_y_scale
+        img.width * canvas_data.screen_x_scale,
+        img.height * canvas_data.screen_y_scale
       );
     };
+    if (canvas_data.snip_prompt_index === 0) canvas_data.screen_timer--;
   } else if (settings.streaming) {
-    let refresh_rate = settings.screen_timer_max / settings.screen_fps;
-    var url = "http://127.0.0.1:8002/screenshot/";
+    let refresh_rate = canvas_data.screen_timer_max / canvas_data.screen_fps;
+    let url = "http://127.0.0.1:8002/screenshot/";
 
-    var xhr = new XMLHttpRequest();
+    let xhr = new XMLHttpRequest();
     xhr.open("GET", url);
 
     xhr.setRequestHeader("Accept", "application/json");
@@ -111,9 +167,8 @@ const draw = (context) => {
 
     xhr.onreadystatechange = function () {
       if (xhr.readyState === 4) {
-        let prefix = "data:image/png;base64,";
         let json_data = JSON.parse(xhr.responseText);
-        image_data.data = prefix + json_data.data;
+        image_data.data = json_data.data;
         if (settings.logging) {
           console.log(xhr.status);
           console.log(xhr.responseText);
@@ -124,36 +179,38 @@ const draw = (context) => {
             img,
             0,
             0,
-            img.width * settings.screen_x_scale,
-            img.height * settings.screen_y_scale
+            img.width * canvas_data.screen_x_scale,
+            img.height * canvas_data.screen_y_scale
           );
         };
-        img.src = image_data.data;
+        let prefix = "data:image/png;base64,";
+        img.src = prefix + image_data.data;
       }
     };
     xhr.send();
-    settings.screen_timer = refresh_rate;
+    canvas_data.screen_timer = refresh_rate;
   } else {
     image_data.data =
-      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAKnRFWHRDcmVhdGlvbiBUaW1lAFNhIDQgTWFpIDIwMDIgMjM6MjA6MzYgKzAxMDBC3wLLAAAAB3RJTUUH0gUEFRUrVURxbAAAAAlwSFlzAAAK8AAACvABQqw0mAAAAARnQU1BAACxjwv8YQUAAAAMSURBVHjaY+CQbQEAANoAqj1ML8MAAAAASUVORK5CYII=";
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAKnRFWHRDcmVhdGlvbiBUaW1lAFNhIDQgTWFpIDIwMDIgMjM6MjA6MzYgKzAxMDBC3wLLAAAAB3RJTUUH0gUEFRUrVURxbAAAAAlwSFlzAAAK8AAACvABQqw0mAAAAARnQU1BAACxjwv8YQUAAAAMSURBVHjaY+CQbQEAANoAqj1ML8MAAAAASUVORK5CYII=";
     img.onload = function () {
       context.drawImage(
         img,
         0,
         0,
-        img.width * settings.screen_x_scale,
-        img.height * settings.screen_y_scale
+        img.width * canvas_data.screen_x_scale,
+        img.height * canvas_data.screen_y_scale
       );
       context.font = "40pt Sans";
       context.fillStyle = "white";
       context.textAlign = "center";
       context.fillText(
         "Stream Paused",
-        (settings.screen_x_scale * settings.screen_width) / 2,
-        (settings.screen_x_scale * settings.screen_height) / 2
+        (canvas_data.screen_x_scale * canvas_data.screen_width) / 2,
+        (canvas_data.screen_x_scale * canvas_data.screen_height) / 2
       );
     };
-    img.src = image_data.data;
+    let prefix = "data:image/png;base64,";
+    img.src = prefix + image_data.data;
   }
 };
 
@@ -169,81 +226,65 @@ class App extends React.Component {
   }
 
   handleMouseMove(event) {
-    let x_offset = 10 * settings.screen_x_scale;
-    let y_offset = 70 * settings.screen_y_scale;
+    let x_offset = 10 / canvas_data.screen_x_scale;
+    let y_offset = 70 / canvas_data.screen_y_scale;
     this.setState({
-      x: event.clientX / settings.screen_x_scale - x_offset,
-      y: event.clientY / settings.screen_y_scale - y_offset,
+      x: event.clientX / canvas_data.screen_x_scale - x_offset,
+      y: event.clientY / canvas_data.screen_y_scale - y_offset,
     });
   }
 
   handleClick(event) {
+    let x_offset = 10 / canvas_data.screen_x_scale;
+    let y_offset = 70 / canvas_data.screen_y_scale;
     this.setState({
-      x: event.clientX / settings.screen_x_scale - 10 * settings.screen_x_scale,
-      y: event.clientY / settings.screen_y_scale - 70 * settings.screen_y_scale,
+      x: event.clientX / canvas_data.screen_x_scale - x_offset,
+      y: event.clientY / canvas_data.screen_y_scale - y_offset,
     });
     if (settings.logging) {
       console.log("Mouse clicked (" + this.state.x + ", " + this.state.y + ")");
     }
     let new_action_id = 0;
-    if (
+    if (block_click) {
+      block_click = false;
+    } else if (
       this.state.x >= 0 &&
-      this.state.x <= settings.screen_width &&
+      this.state.x <= canvas_data.screen_width &&
       this.state.y >= 0 &&
-      this.state.y <= settings.screen_height
+      this.state.y <= canvas_data.screen_height
     ) {
-      if (settings.snip_image) {
-        if (settings.snip_x1 === 0) {
-          settings.snip_x1 = this.state.x;
-        } else if (settings.snip_x2 === 0) {
-          settings.snip_x2 = this.state.x;
+      if (canvas_data.snip_image) {
+        if (canvas_data.snip_x1 === 0) {
+          canvas_data.snip_x1 = this.state.x;
+          canvas_data.snip_prompt_index = 2;
+          prompt = canvas_data.snip_prompt[canvas_data.snip_prompt_index];
+          image_data.data = canvas_data.snip_image;
+          console.log(prompt);
+          if (settings.logging) {
+            console.log("Captured x1");
+          }
+        } else if (canvas_data.snip_x2 === 0) {
+          canvas_data.snip_x2 = this.state.x;
+          canvas_data.snip_prompt_index = 3;
+          prompt = canvas_data.snip_prompt[canvas_data.snip_prompt_index];
+          image_data.data = canvas_data.snip_image;
+          console.log(prompt);
+          if (settings.logging) {
+            console.log("Captured x2");
+          }
         }
-        if (settings.snip_y1 === 0) {
-          settings.snip_y1 = this.state.y;
-        } else if (settings.snip_y2 === 0) {
-          settings.snip_y2 = this.state.y;
-        }
-        if (
-          settings.snip_x1 !== 0 &&
-          settings.snip_x2 !== 0 &&
-          settings.snip_y1 !== 0 &&
-          settings.snip_y2 !== 0
-        ) {
-          var url =
-            "http://127.0.0.1:8002/screen-snip/" +
-            settings.snip_x1 +
-            "/" +
-            settings.snip_y1 +
-            "/" +
-            settings.snip_x2 +
-            "/" +
-            settings.snip_y2 +
-            "/";
-
-          var xhr = new XMLHttpRequest();
-          xhr.open("GET", url);
-
-          xhr.setRequestHeader("Accept", "application/json");
-          xhr.setRequestHeader("Content-Type", "application/json");
-          xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
-
-          xhr.onreadystatechange = function () {
-            if (xhr.readyState === 4) {
-              if (settings.logging) {
-                console.log("Snipped image");
-                console.log(xhr.status);
-                console.log(xhr.responseText);
-              }
-            }
-          };
-
-          xhr.send();
-
-          settings.snip_x1 = 0;
-          settings.snip_x2 = 0;
-          settings.snip_y1 = 0;
-          settings.snip_y2 = 0;
-          settings.snip_image = false;
+        if (canvas_data.snip_y1 === 0) {
+          canvas_data.snip_y1 = this.state.y;
+          canvas_data.snip_prompt_index = 2;
+          if (settings.logging) {
+            console.log("Captured y1");
+          }
+        } else if (canvas_data.snip_y2 === 0) {
+          canvas_data.snip_y2 = this.state.y;
+          canvas_data.snip_prompt_index = 3;
+          if (settings.logging) {
+            console.log("Captured y2");
+          }
         }
       } else if (settings.streaming && settings.recording) {
         if (settings.logging) {
@@ -276,9 +317,9 @@ class App extends React.Component {
         let data =
           '{"name": "' + timestamp + '", "code": ["' + input_code + '"]}';
 
-        url = "http://127.0.0.1:8002/add-action/";
+        let url = "http://127.0.0.1:8002/add-action/";
 
-        xhr = new XMLHttpRequest();
+        let xhr = new XMLHttpRequest();
         xhr.open("POST", url);
 
         xhr.setRequestHeader("Accept", "application/json");
@@ -323,11 +364,74 @@ class App extends React.Component {
       console.log("Key pressed: " + event.key);
     }
     let new_action_id = 0;
-    if (
+    if (canvas_data.snip_prompt_index === 3) {
+      if (event.key === "y") {
+        //Save image
+        if (
+          canvas_data.snip_x1 !== 0 &&
+          canvas_data.snip_x2 !== 0 &&
+          canvas_data.snip_y1 !== 0 &&
+          canvas_data.snip_y2 !== 0
+        ) {
+          let url =
+            "http://127.0.0.1:8002/screen-snip/" +
+            canvas_data.snip_x1 +
+            "/" +
+            canvas_data.snip_y1 +
+            "/" +
+            canvas_data.snip_x2 +
+            "/" +
+            canvas_data.snip_y2 +
+            "/";
+
+          let xhr = new XMLHttpRequest();
+          xhr.open("GET", url);
+
+          xhr.setRequestHeader("Accept", "application/json");
+          xhr.setRequestHeader("Content-Type", "application/json");
+          xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
+
+          xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+              if (settings.logging) {
+                console.log("Snipped image");
+                console.log(xhr.status);
+                console.log(xhr.responseText);
+              }
+            }
+          };
+
+          xhr.send();
+
+          canvas_data.snip_x1 = 0;
+          canvas_data.snip_x2 = 0;
+          canvas_data.snip_y1 = 0;
+          canvas_data.snip_y2 = 0;
+          canvas_data.snip_image = false;
+          canvas_data.snip_prompt_index = 0;
+          prompt = canvas_data.snip_prompt[canvas_data.snip_prompt_index];
+          image_data.data = canvas_data.snip_image;
+          console.log(prompt);
+        } else if (settings.logging) {
+          console.log("Error with snip image prompt");
+        }
+      } else if (event.key === "n") {
+        //Restart
+        canvas_data.snip_x1 = 0;
+        canvas_data.snip_x2 = 0;
+        canvas_data.snip_y1 = 0;
+        canvas_data.snip_y2 = 0;
+        canvas_data.snip_image = false;
+        canvas_data.snip_prompt_index = 0;
+        prompt = canvas_data.snip_prompt[canvas_data.snip_prompt_index];
+        image_data.data = canvas_data.snip_image;
+        console.log(prompt);
+      }
+    } else if (
       this.state.x >= 0 &&
-      this.state.x <= settings.screen_width &&
+      this.state.x <= canvas_data.screen_width &&
       this.state.y >= 0 &&
-      this.state.y <= settings.screen_height
+      this.state.y <= canvas_data.screen_height
     ) {
       if (settings.streaming && settings.recording) {
         console.log("Keypress sent to Fast API");
@@ -338,9 +442,9 @@ class App extends React.Component {
         let data =
           '{"name": "' + timestamp + '", "code": ["' + input_code + '"]}';
 
-        var url = "http://127.0.0.1:8002/add-action/";
+        let url = "http://127.0.0.1:8002/add-action/";
 
-        var xhr = new XMLHttpRequest();
+        let xhr = new XMLHttpRequest();
         xhr.open("POST", url);
 
         xhr.setRequestHeader("Accept", "application/json");
@@ -388,6 +492,7 @@ class App extends React.Component {
 
   handleRecord(event) {
     settings.recording = !settings.recording;
+    block_click = true;
     if (settings.logging) {
       console.log("Recording: " + settings.recording);
     }
@@ -415,15 +520,24 @@ class App extends React.Component {
   }
 
   handleSnipImage(event) {
-    if (!settings.snip_image) {
-      settings.snip_x1 = 0;
-      settings.snip_x2 = 0;
-      settings.snip_y1 = 0;
-      settings.snip_y2 = 0;
+    if (!canvas_data.snip_image) {
+      canvas_data.snip_x1 = 0;
+      canvas_data.snip_x2 = 0;
+      canvas_data.snip_y1 = 0;
+      canvas_data.snip_y2 = 0;
+      canvas_data.snip_prompt_index = 1;
+      prompt = canvas_data.snip_prompt[canvas_data.snip_prompt_index];
+      canvas_data.snip_frame = image_data.data;
+      block_click = true;
+      console.log(prompt);
+    } else {
+      canvas_data.snip_prompt_index = 0;
+      prompt = canvas_data.snip_prompt[canvas_data.snip_prompt_index];
+      console.log(prompt);
     }
-    settings.snip_image = !settings.snip_image;
+    canvas_data.snip_image = !canvas_data.snip_image;
     if (settings.logging) {
-      console.log("Snip Image: " + settings.snip_image);
+      console.log("Snip Image: " + canvas_data.snip_image);
     }
   }
 
@@ -450,9 +564,9 @@ class App extends React.Component {
         //console.log("After delete: " + action_list[i]["id"]);
       }
     }
-    var url = "http://127.0.0.1:8002/delete-action/" + id;
+    let url = "http://127.0.0.1:8002/delete-action/" + id;
 
-    var xhr = new XMLHttpRequest();
+    let xhr = new XMLHttpRequest();
     xhr.open("POST", url);
 
     xhr.setRequestHeader("Accept", "application/json");
@@ -535,8 +649,8 @@ class App extends React.Component {
         <div className="main--section">
           <Canvas
             draw={draw}
-            width={settings.screen_width * settings.screen_x_scale}
-            height={settings.screen_height * settings.screen_y_scale}
+            width={canvas_data.screen_width * canvas_data.screen_x_scale}
+            height={canvas_data.screen_height * canvas_data.screen_y_scale}
           />
           <div className="actions--section">
             <h2>Action List</h2>
