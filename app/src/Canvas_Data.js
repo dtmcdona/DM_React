@@ -1,0 +1,25 @@
+const canvas_data = {
+  snip_image: false,
+  snip_x1: 0,
+  snip_y1: 0,
+  snip_x2: 0,
+  snip_y2: 0,
+  snip_prompt: [
+    "",
+    "Click at the top left corner of the snip",
+    "Click at the bottom right corner of the snip",
+    "Does this snip look good? Enter: (y) or (n)",
+    "Snip saved!",
+  ],
+  snip_prompt_index: 0,
+  snip_collection: [],
+  screen_width: 1920,
+  screen_height: 1080,
+  screen_x_scale: 0.5,
+  screen_y_scale: 0.5,
+  screen_fps: 1,
+  screen_timer: 10,
+  screen_timer_max: 10,
+  snip_frame: "",
+};
+export default canvas_data;

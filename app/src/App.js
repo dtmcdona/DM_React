@@ -373,6 +373,8 @@ class App extends React.Component {
           canvas_data.snip_y1 !== 0 &&
           canvas_data.snip_y2 !== 0
         ) {
+          let data = '{"base64str": "' + canvas_data.snip_frame + '"}';
+
           let url =
             "http://127.0.0.1:8002/screen-snip/" +
             canvas_data.snip_x1 +
@@ -385,7 +387,7 @@ class App extends React.Component {
             "/";
 
           let xhr = new XMLHttpRequest();
-          xhr.open("GET", url);
+          xhr.open("POST", url);
 
           xhr.setRequestHeader("Accept", "application/json");
           xhr.setRequestHeader("Content-Type", "application/json");
@@ -401,7 +403,7 @@ class App extends React.Component {
             }
           };
 
-          xhr.send();
+          xhr.send(data);
 
           canvas_data.snip_x1 = 0;
           canvas_data.snip_x2 = 0;
