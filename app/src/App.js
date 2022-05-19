@@ -19,6 +19,8 @@ var prompt = "";
 
 var block_click = true;
 
+var timestamp = Date.now();
+
 function Action(id, name, code) {
   var dict = {};
   dict["id"] = id;
@@ -57,71 +59,6 @@ const reset_canvas_data = (index) => {
   canvas_data.snip_prompt_index = index;
   prompt = canvas_data.snip_prompt[canvas_data.snip_prompt_index];
   console.log(prompt);
-};
-
-const create_action = (action_type) => {
-  const date = new Date();
-  let timestamp = date.toISOString();
-  let input_code = "delay(" + canvas_data.time_delta + "), ";
-  if (action_type === "click") {
-    let temp = input_code;
-    input_code = temp + "click(x=" + this.state.x + ", y=" + this.state.y;
-  } else if (action_type === "click_image") {
-    let temp = input_code;
-    input_code =
-      temp + "click_image(needle_image=" + snip_list[snip_list.length - 1];
-  } else if (action_type === "move_to_image") {
-    let temp = input_code;
-    input_code =
-      temp + "move_to_image(needle_image=" + snip_list[snip_list.length - 1];
-  }
-  if (settings.random_enabled) {
-    if (settings.random_mouse_path) {
-      let temp = input_code;
-      input_code = temp + ", random_path=true";
-    }
-    if (settings.random_mouse_position) {
-      let temp = input_code;
-      input_code = temp + ", random_range=" + settings.random_mouse_range;
-    }
-    if (settings.random_mouse_delay) {
-      let temp = input_code;
-      input_code = temp + ", random_delay=" + settings.random_mouse_max_delay;
-    }
-  }
-  let temp = input_code;
-  input_code = temp + ")";
-  if (settings.logging) {
-    console.log(input_code);
-  }
-
-  let data = '{"name": "' + timestamp + '", "code": ["' + input_code + '"]}';
-
-  let url = "http://127.0.0.1:8002/add-action/";
-
-  let xhr = new XMLHttpRequest();
-  xhr.open("POST", url);
-
-  xhr.setRequestHeader("Accept", "application/json");
-  xhr.setRequestHeader("Content-Type", "application/json");
-  xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
-
-  xhr.onreadystatechange = function () {
-    if (xhr.readyState === 4) {
-      let json_data = JSON.parse(xhr.responseText);
-      new_action_id = json_data.id;
-      action_list.push(
-        new Action(json_data.id, json_data.name, json_data.code)
-      );
-      if (settings.logging) {
-        console.log(action_list);
-        console.log(xhr.status);
-        console.log(xhr.responseText);
-      }
-    }
-  };
-
-  xhr.send(data);
 };
 
 const execute_action = (id) => {
@@ -291,13 +228,78 @@ class App extends React.Component {
     this.state = { x: 0, y: 0 };
     settings.streaming = false;
     settings.recording = false;
-    const [timestamp, setTimestamp] = React.useState(Date.now());
   }
+
+  create_action = (action_type) => {
+    const date = new Date();
+    let timestamp = date.toISOString();
+    let input_code = "delay(" + canvas_data.time_delta + ')", "';
+    console.log(input_code);
+    if (action_type === "click") {
+      let temp = input_code;
+      input_code = temp + "click(x=" + this.state.x + ", y=" + this.state.y;
+    } else if (action_type === "click_image") {
+      let temp = input_code;
+      input_code =
+        temp + "click_image(needle_image=" + snip_list[snip_list.length - 1];
+    } else if (action_type === "move_to_image") {
+      let temp = input_code;
+      input_code =
+        temp + "move_to_image(needle_image=" + snip_list[snip_list.length - 1];
+    }
+    if (settings.random_enabled) {
+      if (settings.random_mouse_path) {
+        let temp = input_code;
+        input_code = temp + ", random_path=true";
+      }
+      if (settings.random_mouse_position) {
+        let temp = input_code;
+        input_code = temp + ", random_range=" + settings.random_mouse_range;
+      }
+      if (settings.random_mouse_delay) {
+        let temp = input_code;
+        input_code = temp + ", random_delay=" + settings.random_mouse_max_delay;
+      }
+    }
+    let temp = input_code;
+    input_code = temp + ")";
+    if (settings.logging) {
+      console.log(input_code);
+    }
+
+    let data = '{"name": "' + timestamp + '", "code": ["' + input_code + '"]}';
+
+    let url = "http://127.0.0.1:8002/add-action/";
+
+    let xhr = new XMLHttpRequest();
+    xhr.open("POST", url);
+
+    xhr.setRequestHeader("Accept", "application/json");
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
+
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4) {
+        let json_data = JSON.parse(xhr.responseText);
+        new_action_id = json_data.id;
+        action_list.push(
+          new Action(json_data.id, json_data.name, json_data.code)
+        );
+        if (settings.logging) {
+          console.log(action_list);
+          console.log(xhr.status);
+          console.log(xhr.responseText);
+        }
+      }
+    };
+
+    xhr.send(data);
+  };
 
   getTimeDelta() {
     let now = Date.now();
     let time_delta = (now - timestamp) / 1000;
-    setTimestamp(now);
+    timestamp = now;
     canvas_data.time_delta = time_delta;
   }
 
@@ -363,7 +365,7 @@ class App extends React.Component {
         }
       } else if (settings.streaming && settings.recording) {
         this.getTimeDelta();
-        create_action("click");
+        this.create_action("click");
         if (settings.logging) {
           console.log("Mouse click sent to Fast API");
         }
@@ -450,13 +452,13 @@ class App extends React.Component {
       if (event.key === "1") {
         //Create click_image action
         this.getTimeDelta();
-        create_action("click_image");
+        this.create_action("click_image");
         //Clear data
         reset_canvas_data(0);
       } else if (event.key === "2") {
         //Create move_to_image action
         this.getTimeDelta();
-        create_action("move_to_image");
+        this.create_action("move_to_image");
         //Clear data
         reset_canvas_data(0);
       }
@@ -518,6 +520,9 @@ class App extends React.Component {
 
   handleStream(event) {
     settings.streaming = !settings.streaming;
+    if (settings.streaming) {
+      this.getTimeDelta();
+    }
     if (settings.logging) {
       console.log("Streaming: " + settings.streaming);
     }
