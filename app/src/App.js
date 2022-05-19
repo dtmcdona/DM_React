@@ -62,7 +62,7 @@ const reset_canvas_data = (index) => {
 const create_action = (action_type) => {
   const date = new Date();
   let timestamp = date.toISOString();
-  let input_code = "[delay(" + canvas_data.time_delta + "])";
+  let input_code = "delay(" + canvas_data.time_delta + "), ";
   if (action_type === "click") {
     let temp = input_code;
     input_code = temp + "click(x=" + this.state.x + ", y=" + this.state.y;
