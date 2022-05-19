@@ -48,17 +48,32 @@ const get_request_api = (url) => {
   xhr.send();
 };
 
+const reset_canvas_data = (index) => {
+  canvas_data.snip_x1 = 0;
+  canvas_data.snip_x2 = 0;
+  canvas_data.snip_y1 = 0;
+  canvas_data.snip_y2 = 0;
+  canvas_data.snip_image = false;
+  canvas_data.snip_prompt_index = index;
+  prompt = canvas_data.snip_prompt[canvas_data.snip_prompt_index];
+  console.log(prompt);
+};
+
 const create_action = (action_type) => {
   const date = new Date();
   let timestamp = date.toISOString();
-  let input_code = "";
+  let input_code = "[delay(" + canvas_data.time_delta + "])";
   if (action_type === "click") {
-    input_code = "click(x=" + this.state.x + ", y=" + this.state.y;
+    let temp = input_code;
+    input_code = temp + "click(x=" + this.state.x + ", y=" + this.state.y;
   } else if (action_type === "click_image") {
-    input_code = "click_image(needle_image=" + snip_list[snip_list.length - 1];
-  } else if (action_type === "move_to_image") {
+    let temp = input_code;
     input_code =
-      "move_to_image(needle_image=" + snip_list[snip_list.length - 1];
+      temp + "click_image(needle_image=" + snip_list[snip_list.length - 1];
+  } else if (action_type === "move_to_image") {
+    let temp = input_code;
+    input_code =
+      temp + "move_to_image(needle_image=" + snip_list[snip_list.length - 1];
   }
   if (settings.random_enabled) {
     if (settings.random_mouse_path) {
@@ -276,6 +291,14 @@ class App extends React.Component {
     this.state = { x: 0, y: 0 };
     settings.streaming = false;
     settings.recording = false;
+    const [timestamp, setTimestamp] = React.useState(Date.now());
+  }
+
+  getTimeDelta() {
+    let now = Date.now();
+    let time_delta = (now - timestamp) / 1000;
+    setTimestamp(now);
+    canvas_data.time_delta = time_delta;
   }
 
   handleMouseMove(event) {
@@ -339,6 +362,7 @@ class App extends React.Component {
           }
         }
       } else if (settings.streaming && settings.recording) {
+        this.getTimeDelta();
         create_action("click");
         if (settings.logging) {
           console.log("Mouse click sent to Fast API");
@@ -413,54 +437,28 @@ class App extends React.Component {
 
           xhr.send(data);
           if (event.key === "2") {
-            canvas_data.snip_x1 = 0;
-            canvas_data.snip_x2 = 0;
-            canvas_data.snip_y1 = 0;
-            canvas_data.snip_y2 = 0;
-            canvas_data.snip_image = false;
-            canvas_data.snip_prompt_index = 0;
-            prompt = canvas_data.snip_prompt[canvas_data.snip_prompt_index];
-            console.log(prompt);
+            reset_canvas_data(0);
           }
         } else if (settings.logging) {
           console.log("Error with snip image prompt");
         }
       } else if (event.key === "3") {
         //Restart
-        canvas_data.snip_x1 = 0;
-        canvas_data.snip_x2 = 0;
-        canvas_data.snip_y1 = 0;
-        canvas_data.snip_y2 = 0;
-        canvas_data.snip_image = false;
-        canvas_data.snip_prompt_index = 0;
-        prompt = canvas_data.snip_prompt[canvas_data.snip_prompt_index];
-        console.log(prompt);
+        reset_canvas_data(0);
       }
     } else if (canvas_data.snip_prompt_index === 4) {
       if (event.key === "1") {
         //Create click_image action
+        this.getTimeDelta();
         create_action("click_image");
         //Clear data
-        canvas_data.snip_x1 = 0;
-        canvas_data.snip_x2 = 0;
-        canvas_data.snip_y1 = 0;
-        canvas_data.snip_y2 = 0;
-        canvas_data.snip_image = false;
-        canvas_data.snip_prompt_index = 0;
-        prompt = canvas_data.snip_prompt[canvas_data.snip_prompt_index];
-        console.log(prompt);
+        reset_canvas_data(0);
       } else if (event.key === "2") {
         //Create move_to_image action
+        this.getTimeDelta();
         create_action("move_to_image");
         //Clear data
-        canvas_data.snip_x1 = 0;
-        canvas_data.snip_x2 = 0;
-        canvas_data.snip_y1 = 0;
-        canvas_data.snip_y2 = 0;
-        canvas_data.snip_image = false;
-        canvas_data.snip_prompt_index = 0;
-        prompt = canvas_data.snip_prompt[canvas_data.snip_prompt_index];
-        console.log(prompt);
+        reset_canvas_data(0);
       }
     } else if (
       this.state.x >= 0 &&
@@ -527,7 +525,10 @@ class App extends React.Component {
 
   handleRecord(event) {
     settings.recording = !settings.recording;
-    block_click = true;
+    if (settings.recording) {
+      this.getTimeDelta();
+      block_click = true;
+    }
     if (settings.logging) {
       console.log("Recording: " + settings.recording);
     }
@@ -556,15 +557,8 @@ class App extends React.Component {
 
   handleSnipImage(event) {
     if (!canvas_data.snip_image) {
-      canvas_data.snip_x1 = 0;
-      canvas_data.snip_x2 = 0;
-      canvas_data.snip_y1 = 0;
-      canvas_data.snip_y2 = 0;
-      canvas_data.snip_prompt_index = 1;
-      prompt = canvas_data.snip_prompt[canvas_data.snip_prompt_index];
-      canvas_data.snip_frame = image_data.data;
-      block_click = true;
-      console.log(prompt);
+      reset_canvas_data(1);
+      this.getTimeDelta();
     } else {
       canvas_data.snip_prompt_index = 0;
       prompt = canvas_data.snip_prompt[canvas_data.snip_prompt_index];

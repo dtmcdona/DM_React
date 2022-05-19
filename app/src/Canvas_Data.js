@@ -22,5 +22,6 @@ const canvas_data = {
   screen_timer: 10,
   screen_timer_max: 10,
   snip_frame: "",
+  delta_time: 0,
 };
 export default canvas_data;
