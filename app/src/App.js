@@ -11,6 +11,10 @@ var image_data = myData;
 
 var action_list = [];
 
+var new_action_id = 0;
+
+var snip_list = [];
+
 var prompt = "";
 
 var block_click = true;
@@ -23,6 +27,87 @@ function Action(id, name, code) {
   dict["component"] = "action";
   return dict;
 }
+
+const get_request_api = (url) => {
+  let xhr = new XMLHttpRequest();
+  xhr.open("GET", url);
+
+  xhr.setRequestHeader("Accept", "application/json");
+  xhr.setRequestHeader("Content-Type", "application/json");
+  xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
+
+  xhr.onreadystatechange = function () {
+    if (xhr.readyState === 4) {
+      if (settings.logging) {
+        console.log(xhr.status);
+        console.log(xhr.responseText);
+      }
+    }
+  };
+
+  xhr.send();
+};
+
+const create_action = (action_type) => {
+  const date = new Date();
+  let timestamp = date.toISOString();
+  let input_code = "";
+  if (action_type === "click") {
+    input_code = "click(x=" + this.state.x + ", y=" + this.state.y;
+  } else if (action_type === "click_image") {
+    input_code = "click_image(needle_image=" + snip_list[snip_list.length - 1];
+  } else if (action_type === "move_to_image") {
+    input_code =
+      "move_to_image(needle_image=" + snip_list[snip_list.length - 1];
+  }
+  if (settings.random_enabled) {
+    if (settings.random_mouse_path) {
+      let temp = input_code;
+      input_code = temp + ", random_path=true";
+    }
+    if (settings.random_mouse_position) {
+      let temp = input_code;
+      input_code = temp + ", random_range=" + settings.random_mouse_range;
+    }
+    if (settings.random_mouse_delay) {
+      let temp = input_code;
+      input_code = temp + ", random_delay=" + settings.random_mouse_max_delay;
+    }
+  }
+  let temp = input_code;
+  input_code = temp + ")";
+  if (settings.logging) {
+    console.log(input_code);
+  }
+
+  let data = '{"name": "' + timestamp + '", "code": ["' + input_code + '"]}';
+
+  let url = "http://127.0.0.1:8002/add-action/";
+
+  let xhr = new XMLHttpRequest();
+  xhr.open("POST", url);
+
+  xhr.setRequestHeader("Accept", "application/json");
+  xhr.setRequestHeader("Content-Type", "application/json");
+  xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
+
+  xhr.onreadystatechange = function () {
+    if (xhr.readyState === 4) {
+      let json_data = JSON.parse(xhr.responseText);
+      new_action_id = json_data.id;
+      action_list.push(
+        new Action(json_data.id, json_data.name, json_data.code)
+      );
+      if (settings.logging) {
+        console.log(action_list);
+        console.log(xhr.status);
+        console.log(xhr.responseText);
+      }
+    }
+  };
+
+  xhr.send(data);
+};
 
 const execute_action = (id) => {
   let url = "http://127.0.0.1:8002/execute-action/" + id;
@@ -49,45 +134,13 @@ const execute_action = (id) => {
 const send_mouse_click = (x, y) => {
   let url = "http://127.0.0.1:8002/mouse-click/" + x + "/" + y;
 
-  let xhr = new XMLHttpRequest();
-  xhr.open("GET", url);
-
-  xhr.setRequestHeader("Accept", "application/json");
-  xhr.setRequestHeader("Content-Type", "application/json");
-  xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
-
-  xhr.onreadystatechange = function () {
-    if (xhr.readyState === 4) {
-      if (settings.logging) {
-        console.log(xhr.status);
-        console.log(xhr.responseText);
-      }
-    }
-  };
-
-  xhr.send();
+  get_request_api(url);
 };
 
 const send_keypress = (key) => {
   let url = "http://127.0.0.1:8002/keypress/" + key;
 
-  let xhr = new XMLHttpRequest();
-  xhr.open("GET", url);
-
-  xhr.setRequestHeader("Accept", "application/json");
-  xhr.setRequestHeader("Content-Type", "application/json");
-  xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
-
-  xhr.onreadystatechange = function () {
-    if (xhr.readyState === 4) {
-      if (settings.logging) {
-        console.log(xhr.status);
-        console.log(xhr.responseText);
-      }
-    }
-  };
-
-  xhr.send();
+  get_request_api(url);
 };
 
 const draw = (context) => {
@@ -244,7 +297,6 @@ class App extends React.Component {
     if (settings.logging) {
       console.log("Mouse clicked (" + this.state.x + ", " + this.state.y + ")");
     }
-    let new_action_id = 0;
     if (block_click) {
       block_click = false;
     } else if (
@@ -258,7 +310,7 @@ class App extends React.Component {
           canvas_data.snip_x1 = this.state.x;
           canvas_data.snip_prompt_index = 2;
           prompt = canvas_data.snip_prompt[canvas_data.snip_prompt_index];
-          image_data.data = canvas_data.snip_image;
+          image_data.data = canvas_data.snip_frame;
           console.log(prompt);
           if (settings.logging) {
             console.log("Captured x1");
@@ -267,7 +319,7 @@ class App extends React.Component {
           canvas_data.snip_x2 = this.state.x;
           canvas_data.snip_prompt_index = 3;
           prompt = canvas_data.snip_prompt[canvas_data.snip_prompt_index];
-          image_data.data = canvas_data.snip_image;
+          image_data.data = canvas_data.snip_frame;
           console.log(prompt);
           if (settings.logging) {
             console.log("Captured x2");
@@ -287,61 +339,10 @@ class App extends React.Component {
           }
         }
       } else if (settings.streaming && settings.recording) {
+        create_action("click");
         if (settings.logging) {
           console.log("Mouse click sent to Fast API");
         }
-        const date = new Date();
-        let timestamp = date.toISOString();
-        let input_code = "click(x=" + this.state.x + ", y=" + this.state.y;
-        if (settings.random_enabled) {
-          if (settings.random_mouse_path) {
-            let temp = input_code;
-            input_code = temp + ", random_path=true";
-          }
-          if (settings.random_mouse_position) {
-            let temp = input_code;
-            input_code = temp + ", random_range=" + settings.random_mouse_range;
-          }
-          if (settings.random_mouse_delay) {
-            let temp = input_code;
-            input_code =
-              temp + ", random_delay=" + settings.random_mouse_max_delay;
-          }
-        }
-        let temp = input_code;
-        input_code = temp + ")";
-        if (settings.logging) {
-          console.log(input_code);
-        }
-
-        let data =
-          '{"name": "' + timestamp + '", "code": ["' + input_code + '"]}';
-
-        let url = "http://127.0.0.1:8002/add-action/";
-
-        let xhr = new XMLHttpRequest();
-        xhr.open("POST", url);
-
-        xhr.setRequestHeader("Accept", "application/json");
-        xhr.setRequestHeader("Content-Type", "application/json");
-        xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
-
-        xhr.onreadystatechange = function () {
-          if (xhr.readyState === 4) {
-            let json_data = JSON.parse(xhr.responseText);
-            new_action_id = json_data.id;
-            action_list.push(
-              new Action(json_data.id, json_data.name, json_data.code)
-            );
-            if (settings.logging) {
-              console.log(action_list);
-              console.log(xhr.status);
-              console.log(xhr.responseText);
-            }
-          }
-        };
-
-        xhr.send(data);
       }
       if (
         new_action_id !== 0 &&
@@ -354,7 +355,7 @@ class App extends React.Component {
         settings.streaming &&
         settings.remote_control
       ) {
-        send_mouse_click(event.clientX, event.clientY);
+        send_mouse_click(this.state.x, this.state.y);
       }
     }
   }
@@ -363,10 +364,14 @@ class App extends React.Component {
     if (settings.logging) {
       console.log("Key pressed: " + event.key);
     }
-    let new_action_id = 0;
     if (canvas_data.snip_prompt_index === 3) {
-      if (event.key === "y") {
-        //Save image
+      if (event.key === "1") {
+        canvas_data.snip_prompt_index = 4;
+        prompt = canvas_data.snip_prompt[canvas_data.snip_prompt_index];
+        image_data.data = canvas_data.snip_frame;
+      }
+      if (event.key === "1" || event.key === "2") {
+        //Save image and push file name to snip_list
         if (
           canvas_data.snip_x1 !== 0 &&
           canvas_data.snip_x2 !== 0 &&
@@ -374,7 +379,7 @@ class App extends React.Component {
           canvas_data.snip_y2 !== 0
         ) {
           let data = '{"base64str": "' + canvas_data.snip_frame + '"}';
-
+          console.log(data);
           let url =
             "http://127.0.0.1:8002/screen-snip/" +
             canvas_data.snip_x1 +
@@ -395,8 +400,11 @@ class App extends React.Component {
 
           xhr.onreadystatechange = function () {
             if (xhr.readyState === 4) {
+              let json_data = JSON.parse(xhr.responseText);
+              let new_snip_file_name = json_data.id + ".png";
+              snip_list.push(new_snip_file_name);
               if (settings.logging) {
-                console.log("Snipped image");
+                console.log(action_list);
                 console.log(xhr.status);
                 console.log(xhr.responseText);
               }
@@ -404,20 +412,20 @@ class App extends React.Component {
           };
 
           xhr.send(data);
-
-          canvas_data.snip_x1 = 0;
-          canvas_data.snip_x2 = 0;
-          canvas_data.snip_y1 = 0;
-          canvas_data.snip_y2 = 0;
-          canvas_data.snip_image = false;
-          canvas_data.snip_prompt_index = 0;
-          prompt = canvas_data.snip_prompt[canvas_data.snip_prompt_index];
-          image_data.data = canvas_data.snip_image;
-          console.log(prompt);
+          if (event.key === "2") {
+            canvas_data.snip_x1 = 0;
+            canvas_data.snip_x2 = 0;
+            canvas_data.snip_y1 = 0;
+            canvas_data.snip_y2 = 0;
+            canvas_data.snip_image = false;
+            canvas_data.snip_prompt_index = 0;
+            prompt = canvas_data.snip_prompt[canvas_data.snip_prompt_index];
+            console.log(prompt);
+          }
         } else if (settings.logging) {
           console.log("Error with snip image prompt");
         }
-      } else if (event.key === "n") {
+      } else if (event.key === "3") {
         //Restart
         canvas_data.snip_x1 = 0;
         canvas_data.snip_x2 = 0;
@@ -426,7 +434,32 @@ class App extends React.Component {
         canvas_data.snip_image = false;
         canvas_data.snip_prompt_index = 0;
         prompt = canvas_data.snip_prompt[canvas_data.snip_prompt_index];
-        image_data.data = canvas_data.snip_image;
+        console.log(prompt);
+      }
+    } else if (canvas_data.snip_prompt_index === 4) {
+      if (event.key === "1") {
+        //Create click_image action
+        create_action("click_image");
+        //Clear data
+        canvas_data.snip_x1 = 0;
+        canvas_data.snip_x2 = 0;
+        canvas_data.snip_y1 = 0;
+        canvas_data.snip_y2 = 0;
+        canvas_data.snip_image = false;
+        canvas_data.snip_prompt_index = 0;
+        prompt = canvas_data.snip_prompt[canvas_data.snip_prompt_index];
+        console.log(prompt);
+      } else if (event.key === "2") {
+        //Create move_to_image action
+        create_action("move_to_image");
+        //Clear data
+        canvas_data.snip_x1 = 0;
+        canvas_data.snip_x2 = 0;
+        canvas_data.snip_y1 = 0;
+        canvas_data.snip_y2 = 0;
+        canvas_data.snip_image = false;
+        canvas_data.snip_prompt_index = 0;
+        prompt = canvas_data.snip_prompt[canvas_data.snip_prompt_index];
         console.log(prompt);
       }
     } else if (
@@ -568,23 +601,7 @@ class App extends React.Component {
     }
     let url = "http://127.0.0.1:8002/delete-action/" + id;
 
-    let xhr = new XMLHttpRequest();
-    xhr.open("POST", url);
-
-    xhr.setRequestHeader("Accept", "application/json");
-    xhr.setRequestHeader("Content-Type", "application/json");
-    xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
-
-    xhr.onreadystatechange = function () {
-      if (xhr.readyState === 4) {
-        if (settings.logging) {
-          console.log(xhr.status);
-          console.log(xhr.responseText);
-        }
-      }
-    };
-
-    xhr.send();
+    get_request_api(url);
   }
 
   componentDidMount() {
