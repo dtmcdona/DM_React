@@ -9,6 +9,8 @@ import Components from "./components.js";
 
 var image_data = myData;
 
+var task_id = 0;
+
 var action_list = [];
 
 var new_action_id = 0;
@@ -20,6 +22,31 @@ var prompt = "";
 var block_click = true;
 
 var timestamp = Date.now();
+
+// eslint-disable-next-line
+const sleep = (seconds) => {
+  let ms = seconds * 1000;
+  return new Promise((resolve) => setTimeout(resolve, ms));
+};
+
+async function execute_task() {
+  let url = "http://127.0.0.1:8002/execute-task/" + task_id;
+  let prev_recording = settings.recording;
+  let prev_remote_control = settings.remote_control;
+  settings.recording = false;
+  settings.remote_control = false;
+  settings.playback = true;
+  try {
+    const res = await fetch(url);
+    console.log(res);
+  } catch (err) {
+    console.log(err);
+  } finally {
+    settings.recording = prev_recording;
+    settings.remote_control = prev_remote_control;
+    settings.playback = false;
+  }
+}
 
 function Action(id, name, code) {
   var dict = {};
@@ -312,6 +339,45 @@ class App extends React.Component {
     });
   }
 
+  handleSaveTask(event) {
+    let url = "http://127.0.0.1:8002/add-task";
+    let action_id_list = [];
+
+    for (let i = 0; i < action_list.length; i++) {
+      console.log(action_list[i].id);
+      action_id_list.push(action_list[i].id);
+    }
+
+    let data =
+      '{"name": "' +
+      settings.task_name +
+      '", "action_id_list": [' +
+      action_id_list +
+      "]}";
+
+    let xhr = new XMLHttpRequest();
+    xhr.open("POST", url);
+
+    xhr.setRequestHeader("Accept", "application/json");
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
+
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4) {
+        if (settings.logging) {
+          let json_data = JSON.parse(xhr.responseText);
+          task_id = json_data.id;
+        }
+      }
+    };
+
+    xhr.send(data);
+  }
+
+  handleTaskName(event) {
+    settings.task_name = event.target.value;
+  }
+
   handleClick(event) {
     let x_offset = 10 / canvas_data.screen_x_scale;
     let y_offset = 70 / canvas_data.screen_y_scale;
@@ -540,17 +606,7 @@ class App extends React.Component {
   }
 
   handlePlayback(event) {
-    let prev_recording = settings.recording;
-    let prev_remote_control = settings.remote_control;
-    settings.recording = false;
-    settings.remote_control = false;
-    settings.playback = true;
-    for (let i = 0; i < action_list.length; i++) {
-      execute_action(action_list[i].id);
-    }
-    settings.recording = prev_recording;
-    settings.remote_control = prev_remote_control;
-    settings.playback = false;
+    execute_task();
   }
 
   handleRemoteControl(event) {
@@ -648,7 +704,7 @@ class App extends React.Component {
             onClick={this.handlePlayback}
             className="nav--options"
           >
-            {settings.playback ? "Stop Action List" : "Play Action List"}
+            {settings.playback ? "Task playing" : "Start Task"}
           </button>
           <button
             type="button"
@@ -671,7 +727,13 @@ class App extends React.Component {
             height={canvas_data.screen_height * canvas_data.screen_y_scale}
           />
           <div className="actions--section">
-            <h2>Action List</h2>
+            <h2>Task</h2>
+            <input
+              onChange={this.handleTaskName}
+              placeholder="Enter task name"
+            />
+            <button onClick={this.handleSaveTask}>Save</button>
+            <h3>Task actions</h3>
             <table>
               <tbody>
                 <tr>
