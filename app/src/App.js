@@ -48,12 +48,15 @@ async function execute_task() {
   }
 }
 
-function Action(id, name, func, parameters, time_delay) {
+function Action(id, name, func, x1, y1, key_pressed, images, time_delay) {
   var dict = {};
   dict["id"] = id;
   dict["name"] = name;
   dict["function"] = func;
-  dict["parameters"] = parameters;
+  dict["x1"] = x1;
+  dict["y1"] = y1;
+  dict["key_pressed"] = key_pressed;
+  dict["images"] = images;
   dict["time_delay"] = time_delay;
   dict["component"] = "action";
   return dict;
@@ -332,18 +335,15 @@ class App extends React.Component {
       if (xhr.readyState === 4) {
         let json_data = JSON.parse(xhr.responseText);
         new_action_id = json_data.id;
-        let parameters = "";
-        if (json_data.function === "click" || json_data.function === "move") {
-          parameters = "x1: " + json_data.x1 + ", y1: " + json_data.y1;
-        } else if (json_data.function === "key_pressed") {
-          parameters = "key: " + json_data.key_pressed;
-        }
         action_list.push(
           new Action(
             json_data.id,
             json_data.name,
             json_data.function,
-            parameters,
+            json_data.x1,
+            json_data.y1,
+            json_data.key_pressed,
+            json_data.images,
             json_data.time_delay
           )
         );
@@ -737,7 +737,6 @@ class App extends React.Component {
             <table>
               <tbody>
                 <tr>
-                  <th>Delay before</th>
                   <th>Function</th>
                   <th>Parameters</th>
                   <th>Delete</th>
