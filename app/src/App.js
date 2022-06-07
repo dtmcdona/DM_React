@@ -48,11 +48,13 @@ async function execute_task() {
   }
 }
 
-function Action(id, name, code) {
+function Action(id, name, func, parameters, time_delay) {
   var dict = {};
   dict["id"] = id;
   dict["name"] = name;
-  dict["code"] = code;
+  dict["function"] = func;
+  dict["parameters"] = parameters;
+  dict["time_delay"] = time_delay;
   dict["component"] = "action";
   return dict;
 }
@@ -252,49 +254,70 @@ class App extends React.Component {
     this.handleMouseMove = this.handleMouseMove.bind(this);
     this.handleClick = this.handleClick.bind(this);
     this.handleRecord = this.handleRecord.bind(this);
+    this.handleKeyPress = this.handleKeyPress.bind(this);
     this.state = { x: 0, y: 0 };
     settings.streaming = false;
     settings.recording = false;
   }
 
+  getTimeDelta() {
+    let now = Date.now();
+    let time_delta = (now - timestamp) / 1000;
+    timestamp = now;
+    canvas_data.time_delta = time_delta;
+  }
+
   create_action = (action_type) => {
+    this.getTimeDelta();
     const date = new Date();
     let timestamp = date.toISOString();
-    let input_code = "delay(" + canvas_data.time_delta + ')", "';
-    console.log(input_code);
+    let function_params = "";
     if (action_type === "click") {
-      let temp = input_code;
-      input_code = temp + "click(x=" + this.state.x + ", y=" + this.state.y;
-    } else if (action_type === "click_image") {
-      let temp = input_code;
-      input_code =
-        temp + "click_image(needle_image=" + snip_list[snip_list.length - 1];
-    } else if (action_type === "move_to_image") {
-      let temp = input_code;
-      input_code =
-        temp + "move_to_image(needle_image=" + snip_list[snip_list.length - 1];
+      let temp = function_params;
+      function_params =
+        temp + ', "x1": ' + canvas_data.x + ', "y1": ' + canvas_data.y;
+    } else if (
+      action_type === "click_image" ||
+      action_type === "move_to_image"
+    ) {
+      let temp = function_params;
+      function_params =
+        temp + ', "images": ["' + snip_list[snip_list.length - 1] + '", ""]';
+    } else if (action_type === "key_pressed") {
+      let temp = function_params;
+      function_params =
+        temp + ', "key_pressed": "' + canvas_data.key_pressed + '"';
     }
     if (settings.random_enabled) {
       if (settings.random_mouse_path) {
-        let temp = input_code;
-        input_code = temp + ", random_path=true";
+        let temp = function_params;
+        function_params = temp + ', "random_path": true';
       }
       if (settings.random_mouse_position) {
-        let temp = input_code;
-        input_code = temp + ", random_range=" + settings.random_mouse_range;
+        let temp = function_params;
+        function_params =
+          temp + ', "random_range": ' + settings.random_mouse_range;
       }
       if (settings.random_mouse_delay) {
-        let temp = input_code;
-        input_code = temp + ", random_delay=" + settings.random_mouse_max_delay;
+        let temp = function_params;
+        function_params =
+          temp + ', "random_delay": ' + settings.random_mouse_max_delay;
       }
     }
-    let temp = input_code;
-    input_code = temp + ")";
-    if (settings.logging) {
-      console.log(input_code);
-    }
 
-    let data = '{"name": "' + timestamp + '", "code": ["' + input_code + '"]}';
+    let data =
+      '{"name": "' +
+      timestamp +
+      '", "function": "' +
+      action_type +
+      '"' +
+      function_params +
+      ', "time_delay": ' +
+      canvas_data.time_delta +
+      "}";
+    if (settings.logging) {
+      console.log(data);
+    }
 
     let url = "http://127.0.0.1:8002/add-action/";
 
@@ -309,8 +332,20 @@ class App extends React.Component {
       if (xhr.readyState === 4) {
         let json_data = JSON.parse(xhr.responseText);
         new_action_id = json_data.id;
+        let parameters = "";
+        if (json_data.function === "click" || json_data.function === "move") {
+          parameters = "x1: " + json_data.x1 + ", y1: " + json_data.y1;
+        } else if (json_data.function === "key_pressed") {
+          parameters = "key: " + json_data.key_pressed;
+        }
         action_list.push(
-          new Action(json_data.id, json_data.name, json_data.code)
+          new Action(
+            json_data.id,
+            json_data.name,
+            json_data.function,
+            parameters,
+            json_data.time_delay
+          )
         );
         if (settings.logging) {
           console.log(action_list);
@@ -323,13 +358,6 @@ class App extends React.Component {
     xhr.send(data);
   };
 
-  getTimeDelta() {
-    let now = Date.now();
-    let time_delta = (now - timestamp) / 1000;
-    timestamp = now;
-    canvas_data.time_delta = time_delta;
-  }
-
   handleMouseMove(event) {
     let x_offset = 10 / canvas_data.screen_x_scale;
     let y_offset = 70 / canvas_data.screen_y_scale;
@@ -337,6 +365,8 @@ class App extends React.Component {
       x: event.clientX / canvas_data.screen_x_scale - x_offset,
       y: event.clientY / canvas_data.screen_y_scale - y_offset,
     });
+    canvas_data.x = event.clientX / canvas_data.screen_x_scale - x_offset;
+    canvas_data.y = event.clientY / canvas_data.screen_y_scale - y_offset;
   }
 
   handleSaveTask(event) {
@@ -386,19 +416,21 @@ class App extends React.Component {
       y: event.clientY / canvas_data.screen_y_scale - y_offset,
     });
     if (settings.logging) {
-      console.log("Mouse clicked (" + this.state.x + ", " + this.state.y + ")");
+      console.log(
+        "Mouse clicked (" + canvas_data.x + ", " + canvas_data.y + ")"
+      );
     }
     if (block_click) {
       block_click = false;
     } else if (
-      this.state.x >= 0 &&
-      this.state.x <= canvas_data.screen_width &&
-      this.state.y >= 0 &&
-      this.state.y <= canvas_data.screen_height
+      canvas_data.x >= 0 &&
+      canvas_data.x <= canvas_data.screen_width &&
+      canvas_data.y >= 0 &&
+      canvas_data.y <= canvas_data.screen_height
     ) {
       if (canvas_data.snip_image) {
         if (canvas_data.snip_x1 === 0) {
-          canvas_data.snip_x1 = this.state.x;
+          canvas_data.snip_x1 = canvas_data.x;
           canvas_data.snip_prompt_index = 2;
           prompt = canvas_data.snip_prompt[canvas_data.snip_prompt_index];
           image_data.data = canvas_data.snip_frame;
@@ -407,7 +439,7 @@ class App extends React.Component {
             console.log("Captured x1");
           }
         } else if (canvas_data.snip_x2 === 0) {
-          canvas_data.snip_x2 = this.state.x;
+          canvas_data.snip_x2 = canvas_data.x;
           canvas_data.snip_prompt_index = 3;
           prompt = canvas_data.snip_prompt[canvas_data.snip_prompt_index];
           image_data.data = canvas_data.snip_frame;
@@ -417,20 +449,19 @@ class App extends React.Component {
           }
         }
         if (canvas_data.snip_y1 === 0) {
-          canvas_data.snip_y1 = this.state.y;
+          canvas_data.snip_y1 = canvas_data.y;
           canvas_data.snip_prompt_index = 2;
           if (settings.logging) {
             console.log("Captured y1");
           }
         } else if (canvas_data.snip_y2 === 0) {
-          canvas_data.snip_y2 = this.state.y;
+          canvas_data.snip_y2 = canvas_data.y;
           canvas_data.snip_prompt_index = 3;
           if (settings.logging) {
             console.log("Captured y2");
           }
         }
       } else if (settings.streaming && settings.recording) {
-        this.getTimeDelta();
         this.create_action("click");
         if (settings.logging) {
           console.log("Mouse click sent to Fast API");
@@ -447,7 +478,7 @@ class App extends React.Component {
         settings.streaming &&
         settings.remote_control
       ) {
-        send_mouse_click(this.state.x, this.state.y);
+        send_mouse_click(canvas_data.x, canvas_data.y);
       }
     }
   }
@@ -517,56 +548,25 @@ class App extends React.Component {
     } else if (canvas_data.snip_prompt_index === 4) {
       if (event.key === "1") {
         //Create click_image action
-        this.getTimeDelta();
         this.create_action("click_image");
         //Clear data
         reset_canvas_data(0);
       } else if (event.key === "2") {
         //Create move_to_image action
-        this.getTimeDelta();
         this.create_action("move_to_image");
         //Clear data
         reset_canvas_data(0);
       }
     } else if (
-      this.state.x >= 0 &&
-      this.state.x <= canvas_data.screen_width &&
-      this.state.y >= 0 &&
-      this.state.y <= canvas_data.screen_height
+      canvas_data.x >= 0 &&
+      canvas_data.x <= canvas_data.screen_width &&
+      canvas_data.y >= 0 &&
+      canvas_data.y <= canvas_data.screen_height
     ) {
       if (settings.streaming && settings.recording) {
         console.log("Keypress sent to Fast API");
-        const date = new Date();
-        let timestamp = date.toISOString();
-        let input_code = "keypress(" + event.key + ")";
-
-        let data =
-          '{"name": "' + timestamp + '", "code": ["' + input_code + '"]}';
-
-        let url = "http://127.0.0.1:8002/add-action/";
-
-        let xhr = new XMLHttpRequest();
-        xhr.open("POST", url);
-
-        xhr.setRequestHeader("Accept", "application/json");
-        xhr.setRequestHeader("Content-Type", "application/json");
-        xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
-
-        xhr.onreadystatechange = function () {
-          if (xhr.readyState === 4) {
-            let json_data = JSON.parse(xhr.responseText);
-            action_list.push(
-              new Action(json_data.id, json_data.name, json_data.code)
-            );
-            if (settings.logging) {
-              console.log(xhr.status);
-              console.log(xhr.responseText);
-              console.log(action_list);
-            }
-          }
-        };
-
-        xhr.send(data);
+        canvas_data.key_pressed = String(event.key);
+        this.create_action("key_pressed");
       }
       if (
         new_action_id !== 0 &&
@@ -619,7 +619,7 @@ class App extends React.Component {
   handleSnipImage(event) {
     if (!canvas_data.snip_image) {
       reset_canvas_data(1);
-      this.getTimeDelta();
+      canvas_data.snip_frame = image_data.data;
     } else {
       canvas_data.snip_prompt_index = 0;
       prompt = canvas_data.snip_prompt[canvas_data.snip_prompt_index];
@@ -737,9 +737,9 @@ class App extends React.Component {
             <table>
               <tbody>
                 <tr>
-                  <th>ID</th>
-                  <th>Name</th>
-                  <th>Code</th>
+                  <th>Delay before</th>
+                  <th>Function</th>
+                  <th>Parameters</th>
                   <th>Delete</th>
                 </tr>
                 {action_list.map((block) => (

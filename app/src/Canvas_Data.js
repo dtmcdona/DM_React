@@ -1,4 +1,6 @@
 const canvas_data = {
+  x: 0,
+  y: 0,
   snip_image: false,
   snip_x1: 0,
   snip_y1: 0,
@@ -23,5 +25,6 @@ const canvas_data = {
   screen_timer_max: 10,
   snip_frame: "",
   delta_time: 0,
+  key_pressed: "",
 };
 export default canvas_data;

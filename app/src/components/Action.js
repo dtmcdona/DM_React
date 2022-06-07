@@ -2,9 +2,9 @@ import React from "react";
 
 export default (props) => (
   <tr>
-    <th>{props.block.id}</th>
-    <th>{props.block.name}</th>
-    <th>{props.block.code}</th>
+    <th>{props.block.time_delay}</th>
+    <th>{props.block.function}</th>
+    <th>{props.block.parameters}</th>
     <th>
       <button name={props.block.id} onClick={props.delete_func}>
         Delete
