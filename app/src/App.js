@@ -48,13 +48,26 @@ async function execute_task() {
   }
 }
 
-function Action(id, name, func, x1, y1, key_pressed, images, time_delay) {
+function Action(
+  id,
+  name,
+  func,
+  x1,
+  y1,
+  x2,
+  y2,
+  key_pressed,
+  images,
+  time_delay
+) {
   var dict = {};
   dict["id"] = id;
   dict["name"] = name;
   dict["function"] = func;
   dict["x1"] = x1;
   dict["y1"] = y1;
+  dict["x2"] = x2;
+  dict["y2"] = y2;
   dict["key_pressed"] = key_pressed;
   dict["images"] = images;
   dict["time_delay"] = time_delay;
@@ -342,6 +355,8 @@ class App extends React.Component {
             json_data.function,
             json_data.x1,
             json_data.y1,
+            json_data.x2,
+            json_data.y2,
             json_data.key_pressed,
             json_data.images,
             json_data.time_delay
@@ -356,6 +371,57 @@ class App extends React.Component {
     };
 
     xhr.send(data);
+  };
+
+  capture_screen_data = (action_type) => {
+    let url = "";
+    if (action_type === "store_value") {
+      url =
+        "http://127.0.0.1:8002/capture-screen-data/" +
+        canvas_data.snip_x1 +
+        "/" +
+        canvas_data.snip_y1 +
+        "/" +
+        canvas_data.snip_x2 +
+        "/" +
+        canvas_data.snip_y2 +
+        "/-1";
+    }
+
+    let xhr = new XMLHttpRequest();
+    xhr.open("GET", url);
+
+    xhr.setRequestHeader("Accept", "application/json");
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
+
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4) {
+        let json_data = JSON.parse(xhr.responseText);
+        new_action_id = json_data.id;
+        action_list.push(
+          new Action(
+            json_data.id,
+            json_data.name,
+            json_data.function,
+            json_data.x1,
+            json_data.y1,
+            json_data.x2,
+            json_data.y2,
+            json_data.key_pressed,
+            json_data.images,
+            json_data.time_delay
+          )
+        );
+        if (settings.logging) {
+          console.log(action_list);
+          console.log(xhr.status);
+          console.log(xhr.responseText);
+        }
+      }
+    };
+
+    xhr.send();
   };
 
   handleMouseMove(event) {
@@ -554,6 +620,11 @@ class App extends React.Component {
       } else if (event.key === "2") {
         //Create move_to_image action
         this.create_action("move_to_image");
+        //Clear data
+        reset_canvas_data(0);
+      } else if (event.key === "3") {
+        //Create move_to_image action
+        this.capture_screen_data("store_value");
         //Clear data
         reset_canvas_data(0);
       }

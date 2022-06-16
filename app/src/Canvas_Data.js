@@ -11,7 +11,7 @@ const canvas_data = {
     "Click at the top left corner of the snip",
     "Click at the bottom right corner of the snip",
     "Press (1) to create action, (2) to save snip, and (3) to discard snip",
-    "Create action to: (1) click image or (2) move mouse to image",
+    "Create action to: (1) click image or (2) move mouse to image (3) capture text",
     "Snip saved!",
   ],
   snip_prompt_index: 0,
