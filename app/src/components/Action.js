@@ -25,6 +25,7 @@ class Action extends React.Component {
       comparison_value: null,
       created_at: "",
       time_delay: props.block.time_delay,
+      sleep_duration: 0.0,
       key_pressed: null,
       true_case: "none",
       false_case: "none",
@@ -96,6 +97,9 @@ class Action extends React.Component {
       "], " +
       '"time_delay": ' +
       this.state.time_delay +
+      ", " +
+      '"sleep_duration": ' +
+      this.state.sleep_duration +
       ", " +
       '"key_pressed": "' +
       this.state.key_pressed +
@@ -179,7 +183,7 @@ class Action extends React.Component {
                 Condition:
                 <div className="select-container">
                   <select
-                    value={this.condition}
+                    value={this.state.condition}
                     onChange={this.handleChangeCondition}
                   >
                     {action_data.conditionals.map((option) => (
@@ -203,7 +207,7 @@ class Action extends React.Component {
                 Condition is true:
                 <div className="select-container">
                   <select
-                    value={this.true_case}
+                    value={this.state.true_case}
                     onChange={this.handleChangeConditionTrue}
                   >
                     {action_data.result_functions.map((option) => (
@@ -214,7 +218,7 @@ class Action extends React.Component {
                 Condition is false:
                 <div className="select-container">
                   <select
-                    value={this.false_case}
+                    value={this.state.false_case}
                     onChange={this.handleChangeConditionFalse}
                   >
                     {action_data.result_functions.map((option) => (
@@ -222,13 +226,30 @@ class Action extends React.Component {
                     ))}
                   </select>
                 </div>
+                {(this.state.false_case === "sleep" ||
+                  this.state.false_case === "sleep_and_repeat" ||
+                  this.state.true_case === "sleep" ||
+                  this.state.true_case === "sleep_and_repeat") && (
+                  <div className="input-container">
+                    Wait duration:
+                    <input
+                      type="text"
+                      size="10"
+                      value={this.state.sleep_duration}
+                      onChange={(event) =>
+                        this.setState({ sleep_duration: event.target.value })
+                      }
+                      required
+                    />
+                  </div>
+                )}
               </td>
             )}
             <td>
               Action function:
               <div className="select-container">
                 <select
-                  value={this.action_function}
+                  value={this.state.function}
                   onChange={this.handleChangeFunction}
                 >
                   {action_data.action_functions.map((option) => (
@@ -250,17 +271,17 @@ class Action extends React.Component {
                 </div>
               )}
               {this.state.function !== "key_pressed" && (
-              <div className="select-container">
-                <select
-                  value={this.state.click_type}
-                  onChange={this.handleChangeClickType}
-                >
-                  {action_data.click_types.map((option) => (
-                    <option value={option.value}>{option.label}</option>
-                  ))}
-                </select>
-              </div>
-                  )}
+                <div className="select-container">
+                  <select
+                    value={this.state.click_type}
+                    onChange={this.handleChangeClickType}
+                  >
+                    {action_data.click_types.map((option) => (
+                      <option value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
               {this.state.function !== "key_pressed" &&
                 this.state.click_type === "point" &&
                 "(x,y):"}
@@ -330,19 +351,20 @@ class Action extends React.Component {
                 />
               </div>
               {(this.state.function === "capture_screen_data" ||
-              this.state.function === "click_image") && ("Images:")}
+                this.state.function === "click_image") &&
+                "Images:"}
               {(this.state.function === "capture_screen_data" ||
-              this.state.function === "click_image") && (
-              <div className="input-container">
-                <input
-                  type="text"
-                  value={this.state.images}
-                  onChange={(event) =>
-                    this.setState({ images: event.target.value })
-                  }
-                />
-              </div>
-                )}
+                this.state.function === "click_image") && (
+                <div className="input-container">
+                  <input
+                    type="text"
+                    value={this.state.images}
+                    onChange={(event) =>
+                      this.setState({ images: event.target.value })
+                    }
+                  />
+                </div>
+              )}
             </td>
             <td align="right">
               <button>Update</button>

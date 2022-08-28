@@ -81,7 +81,7 @@ const action_data = {
       value: "sleep",
     },
     {
-      label: "Delay _ then repeat",
+      label: "Wait _ seconds then repeat",
       value: "sleep_and_repeat",
     },
     {
