@@ -1,8 +1,15 @@
 import React from "react";
+import action_data from "./Action_Data";
 
 class Action extends React.Component {
   constructor(props) {
     super(props);
+    this.handleChangeFunction = this.handleChangeFunction.bind(this);
+    this.handleChangeCondition = this.handleChangeCondition.bind(this);
+    this.handleChangeConditionTrue = this.handleChangeConditionTrue.bind(this);
+    this.handleChangeConditionFalse =
+      this.handleChangeConditionFalse.bind(this);
+    this.handleChangeClickType = this.handleChangeClickType.bind(this);
     this.state = {
       id: props.block.id,
       name: props.block.name,
@@ -15,22 +22,42 @@ class Action extends React.Component {
       image_conditions: [],
       variables: [],
       variable_condition: [],
+      comparison_value: null,
       created_at: "",
       time_delay: props.block.time_delay,
       key_pressed: null,
-      true_case: "conditions_true",
-      false_case: "conditions_false",
+      true_case: "none",
+      false_case: "none",
       error_case: "error",
       repeat: false,
       num_repeats: 0,
       random_path: false,
       random_range: 0,
       random_delay: 0.0,
+      condition: "none",
+      click_type: "point",
     };
   }
 
   update_action = () => {
+    const base_url = "http://127.0.0.1:8003/";
     let images = "";
+    if (this.state.function !== "capture_screen_data") {
+      this.setState({ image_conditions: null });
+      this.setState({ variable_condition: null });
+      this.setState({ comparison_value: null });
+    } else if (
+      this.state.function === "capture_screen_data" ||
+      this.state.function === "click_image"
+    ) {
+      if (this.state.condition === "if_image_present") {
+        this.setState = { image_conditions: "if_image_present" };
+        this.setState = { variable_condition: null };
+      } else if (this.state.condition !== "none") {
+        this.setState = { image_conditions: null };
+        this.setState = { variable_condition: this.state.condition };
+      }
+    }
     if (String(this.state.images).length > 0)
       images = '"' + String(this.state.images).replace(",", '", "') + '"';
     let data =
@@ -99,7 +126,7 @@ class Action extends React.Component {
       "}";
     console.log(data);
 
-    let url = "http://127.0.0.1:8002/update-action/" + this.state.id;
+    let url = base_url + "update-action/" + this.state.id;
 
     let xhr = new XMLHttpRequest();
     xhr.open("POST", url);
@@ -121,49 +148,205 @@ class Action extends React.Component {
     this.update_action();
   };
 
+  handleChangeFunction(e) {
+    this.setState({ function: e.target.value });
+  }
+
+  handleChangeCondition(e) {
+    this.setState({ condition: e.target.value });
+  }
+
+  handleChangeConditionTrue(e) {
+    this.setState({ true_case: e.target.value });
+  }
+
+  handleChangeConditionFalse(e) {
+    this.setState({ false_case: e.target.value });
+  }
+
+  handleChangeClickType(e) {
+    this.setState({ click_type: e.target.value });
+  }
+
   render() {
     return (
       <tr>
-        <th>{this.props.block.function}</th>
         <th>
           <form onSubmit={this.handleSubmit}>
-            x1:
-            <input
-              type="text"
-              size="10"
-              value={this.state.x1}
-              onChange={(event) => this.setState({ x1: event.target.value })}
-            />
-            <br />
-            y1:
-            <input
-              type="text"
-              size="10"
-              value={this.state.y1}
-              onChange={(event) => this.setState({ y1: event.target.value })}
-            />
-            <br />
-            time_delay:
-            <input
-              type="text"
-              size="10"
-              value={this.state.time_delay}
-              onChange={(event) =>
-                this.setState({ time_delay: event.target.value })
-              }
-              required
-            />
-            <br />
-            images:
-            <input
-              type="text"
-              value={this.state.images}
-              onChange={(event) =>
-                this.setState({ images: event.target.value })
-              }
-            />
-            <br />
-            <button>Update</button>
+            {(this.state.function === "capture_screen_data" ||
+              this.state.function === "click_image") && (
+              <td>
+                Condition:
+                <div className="select-container">
+                  <select
+                    value={this.condition}
+                    onChange={this.handleChangeCondition}
+                  >
+                    {action_data.conditionals.map((option) => (
+                      <option value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </div>
+                Comparison value:
+                <div className="select-container">
+                  <input
+                    type="text"
+                    size="10"
+                    value={this.state.comparison_value}
+                    onChange={(event) =>
+                      this.setState({
+                        comparison_value: event.target.value.split(","),
+                      })
+                    }
+                  />
+                </div>
+                Condition is true:
+                <div className="select-container">
+                  <select
+                    value={this.true_case}
+                    onChange={this.handleChangeConditionTrue}
+                  >
+                    {action_data.result_functions.map((option) => (
+                      <option value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </div>
+                Condition is false:
+                <div className="select-container">
+                  <select
+                    value={this.false_case}
+                    onChange={this.handleChangeConditionFalse}
+                  >
+                    {action_data.result_functions.map((option) => (
+                      <option value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </td>
+            )}
+            <td>
+              Action function:
+              <div className="select-container">
+                <select
+                  value={this.action_function}
+                  onChange={this.handleChangeFunction}
+                >
+                  {action_data.action_functions.map((option) => (
+                    <option value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              </div>
+              {this.state.function === "key_pressed" && (
+                <div className="input-container">
+                  Keyboard
+                  <input
+                    type="text"
+                    size="10"
+                    value={this.state.key_pressed}
+                    onChange={(event) =>
+                      this.setState({ key_pressed: event.target.value })
+                    }
+                  />
+                </div>
+              )}
+              {this.state.function !== "key_pressed" && (
+              <div className="select-container">
+                <select
+                  value={this.state.click_type}
+                  onChange={this.handleChangeClickType}
+                >
+                  {action_data.click_types.map((option) => (
+                    <option value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              </div>
+                  )}
+              {this.state.function !== "key_pressed" &&
+                this.state.click_type === "point" &&
+                "(x,y):"}
+              {this.state.function !== "key_pressed" &&
+                this.state.click_type === "region" &&
+                "Top left (x,y):"}
+              {this.state.function !== "key_pressed" && (
+                <div className="input-container">
+                  (
+                  <input
+                    type="text"
+                    size="10"
+                    value={this.state.x1}
+                    onChange={(event) =>
+                      this.setState({ x1: event.target.value })
+                    }
+                  />
+                  ,
+                  <input
+                    type="text"
+                    size="10"
+                    value={this.state.y1}
+                    onChange={(event) =>
+                      this.setState({ y1: event.target.value })
+                    }
+                  />
+                  )
+                </div>
+              )}
+              {this.state.function !== "key_pressed" &&
+                this.state.click_type === "region" &&
+                "Bottom right (x,y):"}
+              {this.state.function !== "key_pressed" &&
+                this.state.click_type === "region" && (
+                  <div className="input-container">
+                    (
+                    <input
+                      type="text"
+                      size="10"
+                      value={this.state.x2}
+                      onChange={(event) =>
+                        this.setState({ x2: event.target.value })
+                      }
+                    />
+                    ,
+                    <input
+                      type="text"
+                      size="10"
+                      value={this.state.y2}
+                      onChange={(event) =>
+                        this.setState({ y2: event.target.value })
+                      }
+                    />
+                    )
+                  </div>
+                )}
+              Time delay:
+              <div className="input-container">
+                <input
+                  type="text"
+                  size="10"
+                  value={this.state.time_delay}
+                  onChange={(event) =>
+                    this.setState({ time_delay: event.target.value })
+                  }
+                  required
+                />
+              </div>
+              {(this.state.function === "capture_screen_data" ||
+              this.state.function === "click_image") && ("Images:")}
+              {(this.state.function === "capture_screen_data" ||
+              this.state.function === "click_image") && (
+              <div className="input-container">
+                <input
+                  type="text"
+                  value={this.state.images}
+                  onChange={(event) =>
+                    this.setState({ images: event.target.value })
+                  }
+                />
+              </div>
+                )}
+            </td>
+            <td align="right">
+              <button>Update</button>
+            </td>
           </form>
         </th>
         <th>

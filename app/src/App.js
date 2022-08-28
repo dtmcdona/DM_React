@@ -8,20 +8,14 @@ import canvas_data from "./Canvas_Data";
 import Components from "./components.js";
 
 var image_data = myData;
-
 var task_id = 0;
-
 var action_list = [];
-
 var new_action_id = 0;
-
 var snip_list = [];
-
 var prompt = "";
-
 var block_click = true;
-
 var timestamp = Date.now();
+const base_url = "http://127.0.0.1:8003/";
 
 // eslint-disable-next-line
 const sleep = (seconds) => {
@@ -30,7 +24,7 @@ const sleep = (seconds) => {
 };
 
 async function execute_task() {
-  let url = "http://127.0.0.1:8002/execute-task/" + task_id;
+  let url = base_url + "execute-task/" + task_id;
   let prev_recording = settings.recording;
   let prev_remote_control = settings.remote_control;
   settings.recording = false;
@@ -107,7 +101,7 @@ const reset_canvas_data = (index) => {
 };
 
 const execute_action = (id) => {
-  let url = "http://127.0.0.1:8002/execute-action/" + id;
+  let url = base_url + "execute-action/" + id;
 
   let xhr = new XMLHttpRequest();
   xhr.open("POST", url);
@@ -129,13 +123,13 @@ const execute_action = (id) => {
 };
 
 const send_mouse_click = (x, y) => {
-  let url = "http://127.0.0.1:8002/mouse-click/" + x + "/" + y;
+  const url = base_url + "mouse-click/" + x + "/" + y;
 
   get_request_api(url);
 };
 
 const send_keypress = (key) => {
-  let url = "http://127.0.0.1:8002/keypress/" + key;
+  const url = base_url + "keypress/" + key;
 
   get_request_api(url);
 };
@@ -206,7 +200,7 @@ const draw = (context) => {
     if (canvas_data.snip_prompt_index === 0) canvas_data.screen_timer--;
   } else if (settings.streaming) {
     let refresh_rate = canvas_data.screen_timer_max / canvas_data.screen_fps;
-    let url = "http://127.0.0.1:8002/screenshot/";
+    let url = base_url + "screenshot/";
 
     let xhr = new XMLHttpRequest();
     xhr.open("GET", url);
@@ -335,7 +329,7 @@ class App extends React.Component {
       console.log(data);
     }
 
-    let url = "http://127.0.0.1:8002/add-action/";
+    let url = base_url + "add-action/";
 
     let xhr = new XMLHttpRequest();
     xhr.open("POST", url);
@@ -377,7 +371,8 @@ class App extends React.Component {
     let url = "";
     if (action_type === "store_value") {
       url =
-        "http://127.0.0.1:8002/capture-screen-data/" +
+        base_url +
+        "capture-screen-data/" +
         canvas_data.snip_x1 +
         "/" +
         canvas_data.snip_y1 +
@@ -436,7 +431,7 @@ class App extends React.Component {
   }
 
   handleSaveTask(event) {
-    let url = "http://127.0.0.1:8002/add-task";
+    let url = base_url + "add-task";
     let action_id_list = [];
 
     for (let i = 0; i < action_list.length; i++) {
@@ -570,7 +565,8 @@ class App extends React.Component {
           let data = '{"base64str": "' + canvas_data.snip_frame + '"}';
           console.log(data);
           let url =
-            "http://127.0.0.1:8002/screen-snip/" +
+            base_url +
+            "screen-snip/" +
             canvas_data.snip_x1 +
             "/" +
             canvas_data.snip_y1 +
@@ -725,7 +721,7 @@ class App extends React.Component {
         //console.log("After delete: " + action_list[i]["id"]);
       }
     }
-    let url = "http://127.0.0.1:8002/delete-action/" + id;
+    let url = base_url + "delete-action/" + id;
 
     get_request_api(url);
   }
