@@ -57,12 +57,8 @@ const action_data = {
   ],
   result_functions: [
     {
-      label: "None",
-      value: "none",
-    },
-    {
-      label: "Skip this action",
-      value: "skip_action",
+      label: "Continue to next action",
+      value: "continue",
     },
     {
       label: "Set action name",
