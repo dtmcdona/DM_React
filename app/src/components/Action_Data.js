@@ -61,10 +61,6 @@ const action_data = {
       value: "none",
     },
     {
-      label: "Process action",
-      value: "execute_action",
-    },
-    {
       label: "Skip this action",
       value: "skip_action",
     },

@@ -177,8 +177,7 @@ class Action extends React.Component {
       <tr>
         <th>
           <form onSubmit={this.handleSubmit}>
-            {(this.state.function === "capture_screen_data" ||
-              this.state.function === "click_image") && (
+            {this.state.function === "capture_screen_data" && (
               <td>
                 Condition:
                 <div className="select-container">
@@ -350,11 +349,9 @@ class Action extends React.Component {
                   required
                 />
               </div>
-              {(this.state.function === "capture_screen_data" ||
-                this.state.function === "click_image") &&
+              {this.state.function === "click_image" &&
                 "Images:"}
-              {(this.state.function === "capture_screen_data" ||
-                this.state.function === "click_image") && (
+              {this.state.function === "click_image" && (
                 <div className="input-container">
                   <input
                     type="text"
