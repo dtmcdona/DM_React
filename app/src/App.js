@@ -47,14 +47,27 @@ function Action(
   name,
   func,
   x1,
-  y1,
   x2,
+  y1,
   y2,
-  key_pressed,
   images,
-  time_delay
+  image_conditions,
+  variables,
+  variable_condition,
+  comparison_value,
+  created_at,
+  time_delay,
+  sleep_duration,
+  key_pressed,
+  true_case,
+  false_case,
+  error_case,
+  num_repeats,
+  random_path,
+  random_range,
+  random_delay
 ) {
-  var dict = {};
+  let dict = {};
   dict["id"] = id;
   dict["name"] = name;
   dict["function"] = func;
@@ -65,6 +78,13 @@ function Action(
   dict["key_pressed"] = key_pressed;
   dict["images"] = images;
   dict["time_delay"] = time_delay;
+  dict["true_case"] = true_case;
+  dict["false_case"] = false_case;
+  dict["error_case"] = error_case;
+  dict["num_repeats"] = num_repeats;
+  dict["random_path"] = random_path;
+  dict["random_range"] = random_range;
+  dict["random_delay"] = random_delay;
   dict["component"] = "action";
   return dict;
 }
@@ -353,7 +373,22 @@ class App extends React.Component {
             json_data.y2,
             json_data.key_pressed,
             json_data.images,
-            json_data.time_delay
+            json_data.time_delay,
+            json_data.image_conditions,
+            json_data.variables,
+            json_data.variable_condition,
+            json_data.comparison_value,
+            json_data.created_at,
+            json_data.time_delay,
+            json_data.sleep_duration,
+            json_data.key_pressed,
+            json_data.true_case,
+            json_data.false_case,
+            json_data.error_case,
+            json_data.num_repeats,
+            json_data.random_path,
+            json_data.random_range,
+            json_data.random_delay
           )
         );
         if (settings.logging) {

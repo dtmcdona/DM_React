@@ -15,26 +15,25 @@ class Action extends React.Component {
       name: props.block.name,
       function: props.block.function,
       x1: props.block.x1,
-      x2: null,
+      x2: props.block.x2,
       y1: props.block.y1,
-      y2: null,
+      y2: props.block.y2,
       images: props.block.images,
-      image_conditions: [],
-      variables: [],
-      variable_condition: [],
-      comparison_value: null,
+      image_conditions: props.block.image_conditions,
+      variables: props.block.variables,
+      variable_condition: props.block.variable_condition,
+      comparison_value: props.block.comparison_value,
       created_at: "",
       time_delay: props.block.time_delay,
-      sleep_duration: 0.0,
-      key_pressed: null,
-      true_case: "continue",
-      false_case: "continue",
-      error_case: "error",
-      repeat: false,
-      num_repeats: 0,
-      random_path: false,
-      random_range: 0,
-      random_delay: 0.0,
+      sleep_duration: props.block.sleep_duration,
+      key_pressed: props.block.key_pressed,
+      true_case: props.block.true_case,
+      false_case: props.block.false_case,
+      error_case: props.block.error_case,
+      num_repeats: props.block.num_repeats,
+      random_path: props.block.random_path,
+      random_range: props.block.random_range,
+      random_delay: props.block.random_delay,
       condition: "none",
       click_type: "point",
     };
@@ -112,9 +111,6 @@ class Action extends React.Component {
       '", ' +
       '"error_case": "' +
       this.state.error_case +
-      '", ' +
-      '"repeat": ' +
-      this.state.repeat +
       ", " +
       '"num_repeats": ' +
       this.state.num_repeats +
