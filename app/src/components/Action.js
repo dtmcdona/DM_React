@@ -44,8 +44,8 @@ class Action extends React.Component {
     const base_url = "http://127.0.0.1:8003/";
     let images = "";
     if (this.state.function !== "capture_screen_data") {
-      this.setState({ image_conditions: null });
-      this.setState({ variable_condition: null });
+      this.setState({ image_conditions: "" });
+      this.setState({ variable_condition: "" });
       this.setState({ comparison_value: null });
     } else if (
       this.state.function === "capture_screen_data" ||
