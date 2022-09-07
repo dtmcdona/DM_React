@@ -780,12 +780,6 @@ class App extends React.Component {
           >
             Snip image
           </button>
-          <button type="button" className="nav--options">
-            Add condition
-          </button>
-          <button type="button" className="nav--options">
-            Export macro file
-          </button>
         </nav>
         <div className="main--section">
           <Canvas

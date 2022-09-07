@@ -53,9 +53,9 @@ class Action extends React.Component {
     ) {
       if (this.state.condition === "if_image_present") {
         this.setState = { image_conditions: "if_image_present" };
-        this.setState = { variable_condition: null };
+        this.setState = { variable_condition: "" };
       } else if (this.state.condition !== "none") {
-        this.setState = { image_conditions: null };
+        this.setState = { image_conditions: "" };
         this.setState = { variable_condition: this.state.condition };
       }
     }
