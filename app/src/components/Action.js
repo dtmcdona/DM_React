@@ -21,9 +21,8 @@ class Action extends React.Component {
       images: props.block.images,
       image_conditions: props.block.image_conditions,
       variables: props.block.variables,
-      variable_condition: props.block.variable_condition,
-      comparison_value: props.block.comparison_value,
-      created_at: "",
+      variable_conditions: props.block.variable_conditions,
+      comparison_values: props.block.comparison_values,
       time_delay: props.block.time_delay,
       sleep_duration: props.block.sleep_duration,
       key_pressed: props.block.key_pressed,
@@ -41,23 +40,23 @@ class Action extends React.Component {
 
   update_action = () => {
     const base_url = "http://127.0.0.1:8003/";
-    let images = "";
     if (this.state.function !== "capture_screen_data") {
       this.setState({ image_conditions: "" });
-      this.setState({ variable_condition: "" });
+      this.setState({ variable_conditions: "" });
       this.setState({ comparison_value: null });
     } else if (
       this.state.function === "capture_screen_data" ||
       this.state.function === "click_image"
     ) {
       if (this.state.condition === "if_image_present") {
-        this.setState = { image_conditions: "if_image_present" };
-        this.setState = { variable_condition: "" };
+        this.setState({ image_conditions: "if_image_present" });
+        this.setState({ variable_conditions: "" });
       } else if (this.state.condition !== "none") {
-        this.setState = { image_conditions: "" };
-        this.setState = { variable_condition: this.state.condition };
+        this.setState({ image_conditions: "" });
+        this.setState({ variable_conditions: this.state.condition });
       }
     }
+    let images = "";
     if (String(this.state.images).length > 0)
       images = '"' + String(this.state.images).replace(",", '", "') + '"';
     let data =
@@ -91,8 +90,8 @@ class Action extends React.Component {
       '"variables": [' +
       this.state.variables +
       "], " +
-      '"variable_condition": [' +
-      this.state.variable_condition +
+      '"variable_conditions": [' +
+      this.state.variable_conditions +
       "], " +
       '"time_delay": ' +
       this.state.time_delay +
@@ -111,7 +110,7 @@ class Action extends React.Component {
       '", ' +
       '"error_case": "' +
       this.state.error_case +
-      ", " +
+      '", ' +
       '"num_repeats": ' +
       this.state.num_repeats +
       ", " +
@@ -191,10 +190,10 @@ class Action extends React.Component {
                   <input
                     type="text"
                     size="10"
-                    value={this.state.comparison_value}
+                    value={this.state.comparison_values}
                     onChange={(event) =>
                       this.setState({
-                        comparison_value: event.target.value.split(","),
+                        comparison_values: event.target.value.split(","),
                       })
                     }
                   />

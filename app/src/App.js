@@ -53,9 +53,8 @@ function Action(
   images,
   image_conditions,
   variables,
-  variable_condition,
-  comparison_value,
-  created_at,
+  variable_conditions,
+  comparison_values,
   time_delay,
   sleep_duration,
   key_pressed,
@@ -75,9 +74,14 @@ function Action(
   dict["y1"] = y1;
   dict["x2"] = x2;
   dict["y2"] = y2;
-  dict["key_pressed"] = key_pressed;
   dict["images"] = images;
+  dict["image_conditions"] = image_conditions;
+  dict["variables"] = variables;
+  dict["variable_conditions"] = variable_conditions;
+  dict["comparison_values"] = comparison_values;
   dict["time_delay"] = time_delay;
+  dict["sleep_duration"] = sleep_duration;
+  dict["key_pressed"] = key_pressed;
   dict["true_case"] = true_case;
   dict["false_case"] = false_case;
   dict["error_case"] = error_case;
@@ -364,31 +368,28 @@ class App extends React.Component {
         new_action_id = json_data.id;
         action_list.push(
           new Action(
-            json_data.id,
-            json_data.name,
-            json_data.function,
-            json_data.x1,
-            json_data.y1,
-            json_data.x2,
-            json_data.y2,
-            json_data.key_pressed,
-            json_data.images,
-            json_data.time_delay,
-            json_data.image_conditions,
-            json_data.variables,
-            json_data.variable_condition,
-            json_data.comparison_value,
-            json_data.created_at,
-            json_data.time_delay,
-            json_data.sleep_duration,
-            json_data.key_pressed,
-            json_data.true_case,
-            json_data.false_case,
-            json_data.error_case,
-            json_data.num_repeats,
-            json_data.random_path,
-            json_data.random_range,
-            json_data.random_delay
+              json_data.id,
+              json_data.name,
+              json_data.function,
+              json_data.x1,
+              json_data.x2,
+              json_data.y1,
+              json_data.y2,
+              json_data.images,
+              json_data.image_conditions,
+              json_data.variables,
+              json_data.variable_conditions,
+              json_data.comparison_values,
+              json_data.time_delay,
+              json_data.sleep_duration,
+              json_data.key_pressed,
+              json_data.true_case,
+              json_data.false_case,
+              json_data.error_case,
+              json_data.num_repeats,
+              json_data.random_path,
+              json_data.random_range,
+              json_data.random_delay
           )
         );
         if (settings.logging) {
@@ -431,16 +432,28 @@ class App extends React.Component {
         new_action_id = json_data.id;
         action_list.push(
           new Action(
-            json_data.id,
-            json_data.name,
-            json_data.function,
-            json_data.x1,
-            json_data.y1,
-            json_data.x2,
-            json_data.y2,
-            json_data.key_pressed,
-            json_data.images,
-            json_data.time_delay
+              json_data.id,
+              json_data.name,
+              json_data.function,
+              json_data.x1,
+              json_data.x2,
+              json_data.y1,
+              json_data.y2,
+              json_data.images,
+              json_data.image_conditions,
+              json_data.variables,
+              json_data.variable_conditions,
+              json_data.comparison_values,
+              json_data.time_delay,
+              json_data.sleep_duration,
+              json_data.key_pressed,
+              json_data.true_case,
+              json_data.false_case,
+              json_data.error_case,
+              json_data.num_repeats,
+              json_data.random_path,
+              json_data.random_range,
+              json_data.random_delay
           )
         );
         if (settings.logging) {
@@ -762,10 +775,10 @@ class App extends React.Component {
   }
 
   componentDidMount() {
-    document.addEventListener("keydown", this.handleKeyPress, false);
+    window.document.addEventListener('keyup', this.handleKeyPress);
   }
   componentWillUnmount() {
-    document.removeEventListener("keydown", this.handleKeyPress, false);
+    document.removeEventListener("keyup", this.handleKeyPress, false);
   }
 
   render() {
