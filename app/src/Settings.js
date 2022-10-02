@@ -1,7 +1,7 @@
 const settings = {
-  schedule_name: "default_schedule",
-  task_name: "default_task",
-  export_extension: ".py",
+  schedule_name: 'default_schedule',
+  task_name: 'default_task',
+  export_extension: '.py',
   streaming: false,
   recording: false,
   playback: false,
@@ -20,5 +20,5 @@ const settings = {
   mouse_previous_y: 0,
   mouse_current_x: 0,
   mouse_current_y: 0,
-};
-export default settings;
+}
+export default settings
