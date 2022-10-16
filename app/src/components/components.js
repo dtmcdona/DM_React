@@ -1,5 +1,5 @@
 import React from 'react'
-import Action from './components/Action'
+import Action from './Action'
 
 const Components = {
   action: Action,

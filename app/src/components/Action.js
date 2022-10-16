@@ -37,7 +37,7 @@ class Action extends React.Component {
     }
   }
 
-  update_action = () => {
+  updateAction = () => {
     const base_url = 'http://127.0.0.1:8003/'
     if (this.state.function !== 'capture_screen_data') {
       this.setState({ image_conditions: '' })
@@ -143,7 +143,7 @@ class Action extends React.Component {
 
   handleSubmit = (event) => {
     event.preventDefault()
-    this.update_action()
+    this.updateAction()
   }
 
   handleChangeFunction(e) {
