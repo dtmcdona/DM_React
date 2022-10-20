@@ -1,5 +1,5 @@
 function MenuInput({ key_name, value, type, updateSettingValue }) {
-  const updateSettingField = (event) => {
+  const updateValue = (event) => {
     const target = event.target
     const type = target.type
     const value = target.value
@@ -21,7 +21,7 @@ function MenuInput({ key_name, value, type, updateSettingValue }) {
         type={type}
         value={value}
         size='20'
-        onChange={updateSettingField}
+        onChange={updateValue}
       />
     </div>
   )

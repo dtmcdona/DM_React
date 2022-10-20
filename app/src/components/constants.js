@@ -1,4 +1,4 @@
-const action_data = {
+export const action_constants = {
   action_functions: [
     {
       label: 'Click mouse left here',
@@ -116,4 +116,7 @@ const action_data = {
     },
   ],
 }
-export default action_data
+
+export const default_image = {
+  data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAKnRFWHRDcmVhdGlvbiBUaW1lAFNhIDQgTWFpIDIwMDIgMjM6MjA6MzYgKzAxMDBC3wLLAAAAB3RJTUUH0gUEFRUrVURxbAAAAAlwSFlzAAAK8AAACvABQqw0mAAAAARnQU1BAACxjwv8YQUAAAAMSURBVHjaY+CQbQEAANoAqj1ML8MAAAAASUVORK5CYII=',
+}

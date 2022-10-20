@@ -3,15 +3,12 @@ import { connect } from 'react-redux'
 import { controlToggle } from '../actions'
 
 class StreamButton extends React.Component {
+  handleClick = () => {
+    this.props.controlToggle('STREAM', !this.props.streaming)
+  }
   render() {
     return (
-      <button
-        type='button'
-        onClick={() => {
-          this.props.controlToggle('STREAM', !this.props.streaming)
-        }}
-        className='nav--options'
-      >
+      <button type='button' onClick={this.handleClick} className='nav--options'>
         {this.props.streaming ? 'Stop Stream' : 'Start Stream'}
       </button>
     )

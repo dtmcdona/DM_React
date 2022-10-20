@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import defaultImage from './data.json'
+import { useRef, useEffect } from 'react'
+import { default_image } from './constants'
 
 let screen_timer = 100
 
@@ -12,14 +12,13 @@ const Canvas = ({
   image_prompt,
   snip_frame,
 }) => {
-  const canvas = React.useRef()
-  const { screenshotFetching, setScreenshotFetching } = useState(false)
-  React.useEffect(() => {
+  const canvas = useRef()
+  useEffect(() => {
     const context = canvas.current.getContext('2d')
     draw(context)
   })
   const logging = false
-  let image_data = defaultImage
+  let image_data = default_image
 
   const draw = (context) => {
     let img = new Image(width, height)

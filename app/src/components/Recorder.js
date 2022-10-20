@@ -1,6 +1,5 @@
 import { Component } from 'react'
 import '../App.css'
-import myData from './data.json'
 import Components from './components'
 import { connect } from 'react-redux'
 import {
@@ -11,14 +10,11 @@ import {
   settingsValueSet,
 } from '../actions'
 import Canvas from './Canvas'
-import Menu from './Menu'
 
-var image_data = myData
 var task_id = 0
 var action_list = []
 var new_action_id = 0
 var snip_list = []
-var block_click = true
 var timestamp = Date.now()
 const base_url = 'http://127.0.0.1:8003/'
 
@@ -303,6 +299,26 @@ class Recorder extends Component {
     xhr.send(data)
   }
 
+  handlePlayTask = async () => {
+    let url = this.props.settings.base_url + 'execute-task/' + task_id
+    let prev_recording = this.props.controls.recording
+    let prev_remote_control = this.props.controls.remote_control
+    this.props.controlToggle('RECORDING', false)
+    this.props.controlToggle('REMOTE_CONTROL', false)
+    this.props.controlToggle('PLAYBACK', true)
+    console.log('Task started')
+    try {
+      await fetch(url)
+    } catch (err) {
+      console.log(err)
+    } finally {
+      console.log('Task ended')
+      this.props.controlToggle('RECORDING', prev_recording)
+      this.props.controlToggle('REMOTE_CONTROL', prev_remote_control)
+      this.props.controlToggle('PLAYBACK', false)
+    }
+  }
+
   handleClick = (event) => {
     let x_offset = 10 / this.props.canvasData.screen_x_scale
     let y_offset = 70 / this.props.canvasData.screen_y_scale
@@ -369,7 +385,6 @@ class Recorder extends Component {
     if (this.props.canvasData.snip_prompt_index === 3) {
       if (event.key === '1') {
         this.props.canvasDataSet('SNIP_PROMPT_INDEX', 4)
-        image_data.data = this.props.canvasData.snip_frame
       }
       if (event.key === '1' || event.key === '2') {
         //Save image and push file name to snip_list
@@ -498,62 +513,57 @@ class Recorder extends Component {
 
   render() {
     return (
-      <div
-        style={{
-          height: '100vh',
-        }}
-        onMouseMove={this.handleMouseMove}
-        onClick={this.handleClick}
-      >
-        <div className='main--section'>
-          <Canvas
-            width={
-              this.props.canvasData.screen_width *
-              this.props.canvasData.screen_x_scale
+      <div onMouseMove={this.handleMouseMove} onClick={this.handleClick}>
+        <Canvas
+          width={
+            this.props.canvasData.screen_width *
+            this.props.canvasData.screen_x_scale
+          }
+          height={
+            this.props.canvasData.screen_height *
+            this.props.canvasData.screen_y_scale
+          }
+          controls={this.props.controls}
+          canvasData={this.props.canvasData}
+          settings={this.props.settings}
+          image_prompt={
+            this.props.canvasData.snip_prompt[
+              this.props.canvasData.snip_prompt_index
+            ]
+          }
+          snip_frame={this.props.canvasData.snip_frame}
+        />
+        <div className='actions--section'>
+          <h2>Task</h2>
+          <input
+            onChange={(e) =>
+              this.setState({
+                task_name: e.target.value,
+              })
             }
-            height={
-              this.props.canvasData.screen_height *
-              this.props.canvasData.screen_y_scale
-            }
-            controls={this.props.controls}
-            canvasData={this.props.canvasData}
-            settings={this.props.settings}
-            image_prompt={
-              this.props.canvasData.snip_prompt[
-                this.props.canvasData.snip_prompt_index
-              ]
-            }
-            snip_frame={this.props.canvasData.snip_frame}
+            placeholder='Enter task name'
           />
-          <div className='actions--section'>
-            <h2>Task</h2>
-            <input
-              onChange={(e) =>
-                this.setState({
-                  task_name: e.target.value,
-                })
-              }
-              placeholder='Enter task name'
-            />
-            <button onClick={this.handleSaveTask}>Save</button>
-            <h3>Task actions</h3>
-            <table>
-              <tbody>
-                <tr>
-                  <th>Function</th>
-                  <th>Parameters</th>
-                  <th>Delete</th>
-                </tr>
-                {action_list.map((block) => (
-                  <Components
-                    block={block}
-                    event_func={this.handleDeleteAction}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <Menu />
+          <button onClick={this.handleSaveTask}>Save</button>
+          {!this.props.controls.playback && (
+            <button onClick={this.handlePlayTask}>Start Task</button>
+          )}
+          {this.props.controls.playback && 'Task Playing'}
+          <h3>Task actions</h3>
+          <table>
+            <tbody>
+              <tr>
+                <th>Function</th>
+                <th>Parameters</th>
+                <th>Delete</th>
+              </tr>
+              {action_list.map((block) => (
+                <Components
+                  block={block}
+                  event_func={this.handleDeleteAction}
+                />
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     )

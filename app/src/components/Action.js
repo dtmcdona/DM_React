@@ -1,5 +1,5 @@
 import React from 'react'
-import action_data from './Action_Data'
+import { action_constants } from './constants'
 
 class Action extends React.Component {
   constructor(props) {
@@ -180,7 +180,7 @@ class Action extends React.Component {
                       value={this.state.condition}
                       onChange={this.handleChangeCondition}
                     >
-                      {action_data.conditionals.map((option) => (
+                      {action_constants.conditionals.map((option) => (
                         <option value={option.value}>{option.label}</option>
                       ))}
                     </select>
@@ -204,7 +204,7 @@ class Action extends React.Component {
                       value={this.state.true_case}
                       onChange={this.handleChangeConditionTrue}
                     >
-                      {action_data.result_functions.map((option) => (
+                      {action_constants.result_functions.map((option) => (
                         <option value={option.value}>{option.label}</option>
                       ))}
                     </select>
@@ -215,7 +215,7 @@ class Action extends React.Component {
                       value={this.state.false_case}
                       onChange={this.handleChangeConditionFalse}
                     >
-                      {action_data.result_functions.map((option) => (
+                      {action_constants.result_functions.map((option) => (
                         <option value={option.value}>{option.label}</option>
                       ))}
                     </select>
@@ -245,7 +245,7 @@ class Action extends React.Component {
                   value={this.state.function}
                   onChange={this.handleChangeFunction}
                 >
-                  {action_data.action_functions.map((option) => (
+                  {action_constants.action_functions.map((option) => (
                     <option value={option.value}>{option.label}</option>
                   ))}
                 </select>
@@ -269,7 +269,7 @@ class Action extends React.Component {
                     value={this.state.click_type}
                     onChange={this.handleChangeClickType}
                   >
-                    {action_data.click_types.map((option) => (
+                    {action_constants.click_types.map((option) => (
                       <option value={option.value}>{option.label}</option>
                     ))}
                   </select>

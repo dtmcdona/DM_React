@@ -3,15 +3,13 @@ import { connect } from 'react-redux'
 import { controlToggle, remoteControlToggle } from '../actions'
 
 class RemoteControlButton extends React.Component {
+  handleClick = () => {
+    this.props.controlToggle('REMOTE_CONTROL', !this.props.remote_control)
+  }
+
   render() {
     return (
-      <button
-        type='button'
-        onClick={() => {
-          this.props.controlToggle('REMOTE_CONTROL', !this.props.remote_control)
-        }}
-        className='nav--options'
-      >
+      <button type='button' onClick={this.handleClick} className='nav--options'>
         {this.props.remote_control ? 'Remote Control On' : 'Remote Control Off'}
       </button>
     )

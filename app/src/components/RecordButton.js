@@ -3,15 +3,13 @@ import { connect } from 'react-redux'
 import { controlToggle } from '../actions'
 
 class RecordButton extends React.Component {
+  handleClick = () => {
+    this.props.controlToggle('RECORD', !this.props.recording)
+  }
+
   render() {
     return (
-      <button
-        type='button'
-        onClick={() => {
-          this.props.controlToggle('RECORD', !this.props.recording)
-        }}
-        className='nav--options'
-      >
+      <button type='button' onClick={this.handleClick} className='nav--options'>
         {this.props.recording ? 'Stop Recording' : 'Start Recording'}
       </button>
     )
