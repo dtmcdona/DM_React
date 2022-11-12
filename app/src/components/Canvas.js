@@ -4,13 +4,21 @@ import { default_image } from './constants'
 let screen_timer = 100
 
 const Canvas = ({
-  width,
+  base_url,
   height,
-  controls,
-  canvasData,
-  settings,
-  image_prompt,
+  width,
+  screen_fps,
+  screen_timer_max,
+  screen_x_scale,
+  screen_y_scale,
   snip_frame,
+  snip_prompt,
+  snip_prompt_index,
+  snip_x1,
+  snip_x2,
+  snip_y1,
+  snip_y2,
+  streaming,
 }) => {
   const canvas = useRef()
   useEffect(() => {
@@ -22,27 +30,15 @@ const Canvas = ({
 
   const draw = (context) => {
     let img = new Image(width, height)
-    const x_scale = canvasData.screen_x_scale
-    const y_scale = canvasData.screen_y_scale
     if (typeof snip_frame == 'string' && snip_frame !== '') {
       context.clearRect(0, 0, width, 32)
-      if (canvasData.snip_x1 !== 0 && canvasData.snip_y1 !== 0) {
-        context.clearRect(0, 0, width, y_scale * canvasData.snip_y1)
-        context.clearRect(0, 0, x_scale * canvasData.snip_x1, height)
+      if (snip_x1 !== 0 && snip_y1 !== 0) {
+        context.clearRect(0, 0, width, screen_y_scale * snip_y1)
+        context.clearRect(0, 0, screen_x_scale * snip_x1, height)
       }
-      if (canvasData.snip_x2 !== 0 && canvasData.snip_y2 !== 0) {
-        context.clearRect(
-          0,
-          canvasData.screen_y_scale * canvasData.snip_y2,
-          width,
-          height
-        )
-        context.clearRect(
-          canvasData.screen_x_scale * canvasData.snip_x2,
-          0,
-          width,
-          height
-        )
+      if (snip_x2 !== 0 && snip_y2 !== 0) {
+        context.clearRect(0, screen_y_scale * snip_y2, width, height)
+        context.clearRect(screen_x_scale * snip_x2, 0, width, height)
       }
       context.drawImage(img, 0, 0, width, height)
       let prefix = 'data:image/png;base64,'
@@ -50,15 +46,15 @@ const Canvas = ({
       context.font = '20pt Sans'
       context.fillStyle = 'white'
       context.textAlign = 'center'
-      context.fillText(image_prompt, width / 2, 24)
-    } else if (controls.streaming && screen_timer > 0) {
+      context.fillText(snip_prompt, width / 2, 24)
+    } else if (streaming && screen_timer > 0) {
       img.onload = function () {
         context.drawImage(img, 0, 0, img.width, img.height)
       }
-      if (canvasData.snip_prompt_index === 0) screen_timer--
-    } else if (controls.streaming) {
-      let refresh_rate = canvasData.screen_timer_max / canvasData.screen_fps
-      let url = settings.base_url + 'screenshot/'
+      if (snip_prompt_index === 0) screen_timer--
+    } else if (streaming) {
+      let refresh_rate = screen_timer_max / screen_fps
+      let url = base_url + 'screenshot/'
       let xhr = new XMLHttpRequest()
       xhr.open('GET', url)
 

@@ -4,20 +4,22 @@ import { controlToggle, remoteControlToggle } from '../actions'
 
 class RemoteControlButton extends React.Component {
   handleClick = () => {
-    this.props.controlToggle('REMOTE_CONTROL', !this.props.remote_control)
+    this.props.controlToggle('REMOTE_CONTROL', !this.props.remote_controlling)
   }
 
   render() {
     return (
       <button type='button' onClick={this.handleClick} className='nav--options'>
-        {this.props.remote_control ? 'Remote Control On' : 'Remote Control Off'}
+        {this.props.remote_controlling
+          ? 'Remote Control On'
+          : 'Remote Control Off'}
       </button>
     )
   }
 }
 
 const mapStateToProps = (state) => {
-  return { remote_control: state.controls.remote_control }
+  return { remote_controlling: state.controls.remote_controlling }
 }
 
 export default connect(mapStateToProps, { controlToggle })(RemoteControlButton)

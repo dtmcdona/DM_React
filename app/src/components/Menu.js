@@ -42,7 +42,7 @@ class Menu extends React.Component {
                     </th>
                     <th>
                       <MenuInput
-                        key={k}
+                        key_name={k}
                         value={v}
                         type={input_type}
                         updateSettingValue={this.props.settingsValueSet}

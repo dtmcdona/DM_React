@@ -1,3 +1,5 @@
+import { useMemo } from 'react'
+
 function MenuInput({ key_name, value, type, updateSettingValue }) {
   const updateValue = (event) => {
     const target = event.target
@@ -11,19 +13,22 @@ function MenuInput({ key_name, value, type, updateSettingValue }) {
     } else {
       updatedValue = value
     }
-    updateSettingValue(`${key_name.toUpperCase()}`, updatedValue)
+    updateSettingValue(`${target.name.toUpperCase()}`, updatedValue)
   }
 
-  return (
-    <div key={key_name}>
-      <input
-        name={key_name}
-        type={type}
-        value={value}
-        size='20'
-        onChange={updateValue}
-      />
-    </div>
+  return useMemo(
+    () => (
+      <div key={key_name}>
+        <input
+          name={key_name}
+          type={type}
+          value={value}
+          size='20'
+          onChange={updateValue}
+        />
+      </div>
+    ),
+    [value]
   )
 }
 

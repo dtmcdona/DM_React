@@ -87,7 +87,7 @@ class Recorder extends Component {
     this.handleMouseMove = this.handleMouseMove.bind(this)
     this.handleClick = this.handleClick.bind(this)
     this.handleKeyPress = this.handleKeyPress.bind(this)
-    this.state = { x: 0, y: 0, logging: true, snip_frame: '', task_name: '' }
+    this.state = { x: 0, y: 0, logging: true, task_name: '' }
   }
 
   getTimeDelta = () => {
@@ -116,24 +116,22 @@ class Recorder extends Component {
     } else if (action_type === 'key_pressed') {
       let temp = function_params
       function_params =
-        temp + ', "key_pressed": "' + this.props.canvasData.key_pressed + '"'
+        temp + ', "key_pressed": "' + this.props.key_pressed + '"'
     }
-    if (this.props.settings.random_enabled) {
-      if (this.props.settings.random_mouse_path) {
+    if (this.props.random_enabled) {
+      if (this.props.random_mouse_path) {
         let temp = function_params
         function_params = temp + ', "random_path": true'
       }
-      if (this.props.settings.random_mouse_position) {
+      if (this.props.random_mouse_position) {
         let temp = function_params
         function_params =
-          temp + ', "random_range": ' + this.props.settings.random_mouse_range
+          temp + ', "random_range": ' + this.props.random_mouse_range
       }
-      if (this.props.settings.random_mouse_delay) {
+      if (this.props.random_mouse_delay) {
         let temp = function_params
         function_params =
-          temp +
-          ', "random_delay": ' +
-          this.props.settings.random_mouse_max_delay
+          temp + ', "random_delay": ' + this.props.random_mouse_max_delay
       }
     }
 
@@ -145,7 +143,7 @@ class Recorder extends Component {
       '"' +
       function_params +
       ', "time_delay": ' +
-      this.props.canvasData.delta_time +
+      this.props.delta_time +
       '}'
 
     let url = base_url + 'add-action/'
@@ -199,13 +197,13 @@ class Recorder extends Component {
       url =
         base_url +
         'capture-screen-data/' +
-        this.props.canvasData.snip_x1 +
+        this.props.snip_x1 +
         '/' +
-        this.props.canvasData.snip_y1 +
+        this.props.snip_y1 +
         '/' +
-        this.props.canvasData.snip_x2 +
+        this.props.snip_x2 +
         '/' +
-        this.props.canvasData.snip_y2 +
+        this.props.snip_y2 +
         '/-1'
     }
 
@@ -258,11 +256,11 @@ class Recorder extends Component {
   }
 
   handleMouseMove = (event) => {
-    let x_offset = 10 / this.props.canvasData.screen_x_scale
-    let y_offset = 70 / this.props.canvasData.screen_y_scale
+    let x_offset = 10 / this.props.screen_x_scale
+    let y_offset = 70 / this.props.screen_y_scale
     this.setState({
-      x: event.clientX / this.props.canvasData.screen_x_scale - x_offset,
-      y: event.clientY / this.props.canvasData.screen_y_scale - y_offset,
+      x: event.clientX / this.props.screen_x_scale - x_offset,
+      y: event.clientY / this.props.screen_y_scale - y_offset,
     })
   }
 
@@ -300,52 +298,58 @@ class Recorder extends Component {
   }
 
   handlePlayTask = async () => {
-    let url = this.props.settings.base_url + 'execute-task/' + task_id
-    let prev_recording = this.props.controls.recording
-    let prev_remote_control = this.props.controls.remote_control
-    this.props.controlToggle('RECORDING', false)
+    let url = this.props.base_url + 'execute-task/' + task_id
+    let prev_recording = this.props.recording
+    let prev_remote_controlling = this.props.remote_controlling
+    this.props.controlToggle('RECORD', false)
     this.props.controlToggle('REMOTE_CONTROL', false)
     this.props.controlToggle('PLAYBACK', true)
-    console.log('Task started')
+    if (this.state.logging) {
+      console.log('Task started')
+    }
     try {
       await fetch(url)
     } catch (err) {
-      console.log(err)
+      if (this.state.logging) {
+        console.log(err)
+      }
     } finally {
-      console.log('Task ended')
-      this.props.controlToggle('RECORDING', prev_recording)
-      this.props.controlToggle('REMOTE_CONTROL', prev_remote_control)
+      this.props.controlToggle('RECORD', prev_recording)
+      this.props.controlToggle('REMOTE_CONTROL', prev_remote_controlling)
       this.props.controlToggle('PLAYBACK', false)
+      if (this.state.logging) {
+        console.log('Task finished')
+      }
     }
   }
 
   handleClick = (event) => {
-    let x_offset = 10 / this.props.canvasData.screen_x_scale
-    let y_offset = 70 / this.props.canvasData.screen_y_scale
+    let x_offset = 10 / this.props.screen_x_scale
+    let y_offset = 70 / this.props.screen_y_scale
     this.setState({
-      x: event.clientX / this.props.canvasData.screen_x_scale - x_offset,
-      y: event.clientY / this.props.canvasData.screen_y_scale - y_offset,
+      x: event.clientX / this.props.screen_x_scale - x_offset,
+      y: event.clientY / this.props.screen_y_scale - y_offset,
     })
     if (this.state.logging) {
       console.log('Mouse clicked (' + this.state.x + ', ' + this.state.y + ')')
     }
     if (
       this.state.x >= 0 &&
-      this.state.x <= this.props.canvasData.screen_width &&
+      this.state.x <= this.props.screen_width &&
       this.state.y >= 0 &&
-      this.state.y <= this.props.canvasData.screen_height
+      this.state.y <= this.props.screen_height
     ) {
-      if (this.props.canvasData.snip_image) {
-        if (this.props.canvasData.snip_x1 === 0) {
+      if (this.props.snipping_image) {
+        if (this.props.snip_x1 === 0) {
           this.props.canvasSetCoords(2, this.state.x, this.state.y, 0, 0)
           if (this.state.logging) {
             console.log('Captured x1 and y1')
           }
-        } else if (this.props.canvasData.snip_x2 === 0) {
+        } else if (this.props.snip_x2 === 0) {
           this.props.canvasSetCoords(
             3,
-            this.props.canvasData.snip_x1,
-            this.props.canvasData.snip_y1,
+            this.props.snip_x1,
+            this.props.snip_y1,
             this.state.x,
             this.state.y
           )
@@ -353,10 +357,7 @@ class Recorder extends Component {
             console.log('Captured x2 and y2')
           }
         }
-      } else if (
-        this.props.controls.streaming &&
-        this.props.controls.recording
-      ) {
+      } else if (this.props.streaming && this.props.recording) {
         this.create_action('click')
         if (this.state.logging) {
           console.log('Mouse click sent to Fast API')
@@ -364,14 +365,14 @@ class Recorder extends Component {
       }
       if (
         new_action_id !== 0 &&
-        this.props.controls.streaming &&
-        this.props.controls.remote_control
+        this.props.streaming &&
+        this.props.remote_controlling
       ) {
         get_request_api('execute-action/' + new_action_id)
       } else if (
         new_action_id === 0 &&
-        this.props.controls.streaming &&
-        this.props.controls.remote_control
+        this.props.streaming &&
+        this.props.remote_controlling
       ) {
         get_request_api('mouse-click/' + this.state.x + '/' + this.state.y)
       }
@@ -382,30 +383,30 @@ class Recorder extends Component {
     if (this.state.logging) {
       console.log('Key pressed: ' + event.key)
     }
-    if (this.props.canvasData.snip_prompt_index === 3) {
+    if (this.props.snip_prompt_index === 3) {
       if (event.key === '1') {
         this.props.canvasDataSet('SNIP_PROMPT_INDEX', 4)
       }
       if (event.key === '1' || event.key === '2') {
         //Save image and push file name to snip_list
         if (
-          this.props.canvasData.snip_x1 !== 0 &&
-          this.props.canvasData.snip_x2 !== 0 &&
-          this.props.canvasData.snip_y1 !== 0 &&
-          this.props.canvasData.snip_y2 !== 0
+          this.props.snip_x1 !== 0 &&
+          this.props.snip_x2 !== 0 &&
+          this.props.snip_y1 !== 0 &&
+          this.props.snip_y2 !== 0
         ) {
-          let data = '{"base64str": "' + this.props.canvasData.snip_frame + '"}'
+          let data = '{"base64str": "' + this.props.snip_frame + '"}'
           console.log(data)
           let url =
             base_url +
             'screen-snip/' +
-            this.props.canvasData.snip_x1 +
+            this.props.snip_x1 +
             '/' +
-            this.props.canvasData.snip_y1 +
+            this.props.snip_y1 +
             '/' +
-            this.props.canvasData.snip_x2 +
+            this.props.snip_x2 +
             '/' +
-            this.props.canvasData.snip_y2 +
+            this.props.snip_y2 +
             '/'
 
           let xhr = new XMLHttpRequest()
@@ -434,7 +435,7 @@ class Recorder extends Component {
         //Restart
         this.props.canvasDataReset(false)
       }
-    } else if (this.props.canvasData.snip_prompt_index === 4) {
+    } else if (this.props.snip_prompt_index === 4) {
       if (event.key === '1') {
         //Create click_image action
         this.create_action('click_image')
@@ -453,25 +454,25 @@ class Recorder extends Component {
       }
     } else if (
       this.state.x >= 0 &&
-      this.state.x <= this.props.canvasData.screen_width &&
+      this.state.x <= this.props.screen_width &&
       this.state.y >= 0 &&
-      this.state.y <= this.props.canvasData.screen_height
+      this.state.y <= this.props.screen_height
     ) {
-      if (this.props.controls.streaming && this.props.controls.recording) {
+      if (this.props.streaming && this.props.recording) {
         console.log('Keypress sent to Fast API')
         this.props.canvasDataSet('KEY_PRESSED', String(event.key))
         this.create_action('key_pressed')
       }
       if (
         new_action_id !== 0 &&
-        this.props.controls.streaming &&
-        this.props.controls.remote_control
+        this.props.streaming &&
+        this.props.remote_controlling
       ) {
         get_request_api('execute-action/' + new_action_id)
       } else if (
         new_action_id === 0 &&
-        this.props.controls.streaming &&
-        this.props.controls.remote_control
+        this.props.streaming &&
+        this.props.remote_controlling
       ) {
         get_request_api('keypress/' + event.key)
       }
@@ -485,12 +486,12 @@ class Recorder extends Component {
     }
     var temp_id = 0
     let action_deleted = false
+    console.log('Before delete', action_list)
     for (let i = 0; i < action_list.length; i++) {
       if (action_list[i]['id'] === id) {
-        //console.log(action_list);
         action_list.splice(i, 1)
-        //console.log("ID matched:" + id);
-        if (action_list.length > 0 && action_list.length > i) {
+        console.log('ID matched:' + id)
+        if (action_list.length > i) {
           action_list[i]['id'] = id
         }
         action_deleted = true
@@ -498,8 +499,8 @@ class Recorder extends Component {
       } else if (action_deleted) {
         temp_id = action_list[i]['id']
         action_list[i]['id'] = temp_id - 1
-        //console.log("After delete: " + action_list[i]["id"]);
       }
+      console.log('After delete', action_list)
     }
     get_request_api('delete-action/' + id)
   }
@@ -515,23 +516,21 @@ class Recorder extends Component {
     return (
       <div onMouseMove={this.handleMouseMove} onClick={this.handleClick}>
         <Canvas
-          width={
-            this.props.canvasData.screen_width *
-            this.props.canvasData.screen_x_scale
-          }
-          height={
-            this.props.canvasData.screen_height *
-            this.props.canvasData.screen_y_scale
-          }
-          controls={this.props.controls}
-          canvasData={this.props.canvasData}
-          settings={this.props.settings}
-          image_prompt={
-            this.props.canvasData.snip_prompt[
-              this.props.canvasData.snip_prompt_index
-            ]
-          }
-          snip_frame={this.props.canvasData.snip_frame}
+          base_url={this.props.base_url}
+          height={this.props.screen_height * this.props.screen_y_scale}
+          width={this.props.screen_width * this.props.screen_x_scale}
+          screen_fps={this.props.screen_fps}
+          screen_timer_max={this.props.screen_timer_max}
+          screen_x_scale={this.props.screen_x_scale}
+          screen_y_scale={this.props.screen_y_scale}
+          snip_frame={this.props.snip_frame}
+          snip_prompt={this.props.snip_prompt[this.props.snip_prompt_index]}
+          snip_prompt_index={this.props.snip_prompt_index}
+          snip_x1={this.props.snip_x1}
+          snip_x2={this.props.snip_x2}
+          snip_y1={this.props.snip_y1}
+          snip_y2={this.props.snip_y2}
+          streaming={this.props.streaming}
         />
         <div className='actions--section'>
           <h2>Task</h2>
@@ -544,10 +543,10 @@ class Recorder extends Component {
             placeholder='Enter task name'
           />
           <button onClick={this.handleSaveTask}>Save</button>
-          {!this.props.controls.playback && (
+          {!this.props.playing_back && (
             <button onClick={this.handlePlayTask}>Start Task</button>
           )}
-          {this.props.controls.playback && 'Task Playing'}
+          {this.props.playing_back && 'Task Playing'}
           <h3>Task actions</h3>
           <table>
             <tbody>
@@ -569,14 +568,42 @@ class Recorder extends Component {
     )
   }
 }
+
 const mapStateToProps = (state) => {
-  console.log('Controls:', state.controls)
-  console.log('CanvasData:', state.canvasData)
-  console.log('Settings', state.settings)
+  //console.log('Controls:', state.controls)
+  //console.log('CanvasData:', state.canvasData)
+  //console.log('Settings', state.settings)
   return {
-    controls: state.controls,
-    canvasData: state.canvasData,
-    settings: state.settings,
+    //Controls
+    playing_back: state.controls.playing_back,
+    recording: state.controls.recording,
+    remote_controlling: state.controls.remote_controlling,
+    streaming: state.controls.streaming,
+    //CanvasData
+    delta_time: state.canvasData.delta_time,
+    key_pressed: state.canvasData.key_pressed,
+    screen_fps: state.canvasData.screen_fps,
+    screen_width: state.canvasData.screen_width,
+    screen_height: state.canvasData.screen_height,
+    screen_timer_max: state.canvasData.screen_timer_max,
+    screen_x_scale: state.canvasData.screen_x_scale,
+    screen_y_scale: state.canvasData.screen_y_scale,
+    snip_frame: state.canvasData.snip_frame,
+    snip_prompt: state.canvasData.snip_prompt,
+    snip_prompt_index: state.canvasData.snip_prompt_index,
+    snip_x1: state.canvasData.snip_x1,
+    snip_x2: state.canvasData.snip_x2,
+    snip_y1: state.canvasData.snip_y1,
+    snip_y2: state.canvasData.snip_y2,
+    snipping_image: state.canvasData.snipping_image,
+    //Settings
+    base_url: state.settings.base_url,
+    random_enabled: state.settings.random_enabled,
+    random_mouse_delay: state.settings.random_mouse_delay,
+    random_mouse_path: state.settings.random_mouse_path,
+    random_mouse_position: state.settings.random_mouse_position,
+    random_mouse_max_delay: state.settings.random_mouse_max_delay,
+    random_mouse_range: state.settings.random_mouse_range,
   }
 }
 

@@ -1,14 +1,19 @@
+import { useMemo } from 'react'
+
 function MenuButton({ key_name, value, updateSettingValue }) {
-  const updateValue = () => {
-    updateSettingValue(`${key_name.toUpperCase()}`, !value)
+  const updateValue = (event) => {
+    updateSettingValue(`${event.target.name.toUpperCase()}`, !value)
   }
 
-  return (
-    <div key={key_name}>
-      <button type='button' onClick={updateValue}>
-        {value ? 'On' : 'Off'}
-      </button>
-    </div>
+  return useMemo(
+    () => (
+      <div key={key_name}>
+        <button name={key_name} type='button' onClick={updateValue}>
+          {value ? 'On' : 'Off'}
+        </button>
+      </div>
+    ),
+    [value]
   )
 }
 
