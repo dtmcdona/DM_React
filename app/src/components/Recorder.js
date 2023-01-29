@@ -11,16 +11,14 @@ import {
 } from '../actions'
 import Canvas from './Canvas'
 
-var task_id = 0
+var task_id = ''
 var action_list = []
-var new_action_id = 0
 var snip_list = []
 var timestamp = Date.now()
 const base_url = 'http://127.0.0.1:8003/'
 
 function Action(
   id,
-  name,
   func,
   x1,
   x2,
@@ -44,7 +42,6 @@ function Action(
 ) {
   let dict = {}
   dict['id'] = id
-  dict['name'] = name
   dict['function'] = func
   dict['x1'] = x1
   dict['y1'] = y1
@@ -87,7 +84,7 @@ class Recorder extends Component {
     this.handleMouseMove = this.handleMouseMove.bind(this)
     this.handleClick = this.handleClick.bind(this)
     this.handleKeyPress = this.handleKeyPress.bind(this)
-    this.state = { x: 0, y: 0, logging: true, task_name: '' }
+    this.state = { x: 0, y: 0, logging: true, task_id: '' }
   }
 
   getTimeDelta = () => {
@@ -99,8 +96,6 @@ class Recorder extends Component {
 
   create_action = (action_type) => {
     this.getTimeDelta()
-    const date = new Date()
-    let timestamp = date.toISOString()
     let function_params = ''
     if (action_type === 'click') {
       let temp = function_params
@@ -136,9 +131,7 @@ class Recorder extends Component {
     }
 
     let data =
-      '{"name": "' +
-      timestamp +
-      '", "function": "' +
+      '{"function": "' +
       action_type +
       '"' +
       function_params +
@@ -146,7 +139,9 @@ class Recorder extends Component {
       this.props.delta_time +
       '}'
 
-    let url = base_url + 'add-action/'
+    const url = this.props.remote_controlling
+      ? `${base_url}add-execute-action/`
+      : `${base_url}add-action/`
 
     let xhr = new XMLHttpRequest()
     xhr.open('POST', url)
@@ -158,11 +153,9 @@ class Recorder extends Component {
     xhr.onreadystatechange = function () {
       if (xhr.readyState === 4) {
         let json_data = JSON.parse(xhr.responseText)
-        new_action_id = json_data.id
         action_list.push(
           new Action(
             json_data.id,
-            json_data.name,
             json_data.function,
             json_data.x1,
             json_data.x2,
@@ -217,11 +210,9 @@ class Recorder extends Component {
     xhr.onreadystatechange = function () {
       if (xhr.readyState === 4) {
         let json_data = JSON.parse(xhr.responseText)
-        new_action_id = json_data.id
         action_list.push(
           new Action(
             json_data.id,
-            json_data.name,
             json_data.function,
             json_data.x1,
             json_data.x2,
@@ -265,17 +256,25 @@ class Recorder extends Component {
   }
 
   handleSaveTask = () => {
-    let url = base_url + 'add-task'
-    let action_id_list = []
-
+    let url = ''
+    if (task_id === '') {
+      url = base_url + 'add-task'
+    } else {
+      url = base_url + 'update-task/' + task_id
+    }
+    let action_id_list = ''
     for (let i = 0; i < action_list.length; i++) {
       console.log(action_list[i].id)
-      action_id_list.push(action_list[i].id)
+      if (i === 0) {
+        action_id_list = action_id_list + `"${action_list[i].id}"`
+      } else {
+        action_id_list = action_id_list + `, "${action_list[i].id}"`
+      }
     }
 
     let data =
-      '{"name": "' +
-      this.state.task_name +
+      '{"id": "' +
+      this.state.task_id +
       '", "action_id_list": [' +
       action_id_list +
       ']}'
@@ -295,6 +294,13 @@ class Recorder extends Component {
     }
 
     xhr.send(data)
+  }
+
+  handleNewTask = async () => {
+    this.setState({
+      task_id: '',
+    })
+    task_id = ''
   }
 
   handlePlayTask = async () => {
@@ -364,13 +370,7 @@ class Recorder extends Component {
         }
       }
       if (
-        new_action_id !== 0 &&
-        this.props.streaming &&
-        this.props.remote_controlling
-      ) {
-        get_request_api('execute-action/' + new_action_id)
-      } else if (
-        new_action_id === 0 &&
+        !this.props.recording &&
         this.props.streaming &&
         this.props.remote_controlling
       ) {
@@ -464,13 +464,7 @@ class Recorder extends Component {
         this.create_action('key_pressed')
       }
       if (
-        new_action_id !== 0 &&
-        this.props.streaming &&
-        this.props.remote_controlling
-      ) {
-        get_request_api('execute-action/' + new_action_id)
-      } else if (
-        new_action_id === 0 &&
+        !this.props.recording &&
         this.props.streaming &&
         this.props.remote_controlling
       ) {
@@ -480,28 +474,15 @@ class Recorder extends Component {
   }
 
   handleDeleteAction = (event) => {
-    const id = parseInt(event.target.name, 10)
+    console.log('Before delete', action_list)
+    const id = event.target.name
     if (this.state.logging) {
       console.log('Delete action:' + id)
     }
     var temp_id = 0
     let action_deleted = false
-    console.log('Before delete', action_list)
-    for (let i = 0; i < action_list.length; i++) {
-      if (action_list[i]['id'] === id) {
-        action_list.splice(i, 1)
-        console.log('ID matched:' + id)
-        if (action_list.length > i) {
-          action_list[i]['id'] = id
-        }
-        action_deleted = true
-        //console.log(action_list);
-      } else if (action_deleted) {
-        temp_id = action_list[i]['id']
-        action_list[i]['id'] = temp_id - 1
-      }
-      console.log('After delete', action_list)
-    }
+    action_list.splice(id, 1)
+    console.log('After delete', action_list)
     get_request_api('delete-action/' + id)
   }
 
@@ -537,12 +518,13 @@ class Recorder extends Component {
           <input
             onChange={(e) =>
               this.setState({
-                task_name: e.target.value,
+                task_id: e.target.value,
               })
             }
             placeholder='Enter task name'
           />
           <button onClick={this.handleSaveTask}>Save</button>
+          <button onClick={this.handleNewTask}>New</button>
           {!this.props.playing_back && (
             <button onClick={this.handlePlayTask}>Start Task</button>
           )}

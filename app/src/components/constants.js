@@ -65,8 +65,8 @@ export const action_constants = {
       value: 'set_action_name',
     },
     {
-      label: 'Skip to action named:',
-      value: 'skip_to_name',
+      label: 'Skip to action id:',
+      value: 'skip_to_id',
     },
     {
       label: 'Wait for _ seconds',

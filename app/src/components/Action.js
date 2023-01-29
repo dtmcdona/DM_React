@@ -11,7 +11,6 @@ class Action extends React.Component {
     this.handleChangeClickType = this.handleChangeClickType.bind(this)
     this.state = {
       id: props.block.id,
-      name: props.block.name,
       function: props.block.function,
       x1: props.block.x1,
       x2: props.block.x2,
@@ -61,9 +60,6 @@ class Action extends React.Component {
     let data =
       '{"id": ' +
       this.state.id +
-      ', ' +
-      '"name": "' +
-      this.state.name +
       '", ' +
       '"function": "' +
       this.state.function +
