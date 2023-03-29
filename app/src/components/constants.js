@@ -9,6 +9,10 @@ export const action_constants = {
       value: 'click_image',
     },
     {
+      label: 'Click on image within region',
+      value: 'click_image_region',
+    },
+    {
       label: 'Move mouse to',
       value: 'move_to',
     },

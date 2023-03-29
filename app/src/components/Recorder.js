@@ -107,7 +107,7 @@ class Recorder extends Component {
     ) {
       let temp = function_params
       function_params =
-        temp + ', "images": ["' + snip_list[snip_list.length - 1] + '", ""]'
+        temp + ', "images": ["' + snip_list[snip_list.length - 1] + '"]'
     } else if (action_type === 'key_pressed') {
       let temp = function_params
       function_params =
@@ -304,7 +304,6 @@ class Recorder extends Component {
   }
 
   handlePlayTask = async () => {
-    let url = this.props.base_url + 'execute-task/' + task_id
     let prev_recording = this.props.recording
     let prev_remote_controlling = this.props.remote_controlling
     this.props.controlToggle('RECORD', false)
@@ -314,7 +313,7 @@ class Recorder extends Component {
       console.log('Task started')
     }
     try {
-      await fetch(url)
+      await get_request_api(`execute-task/${task_id}`)
     } catch (err) {
       if (this.state.logging) {
         console.log(err)

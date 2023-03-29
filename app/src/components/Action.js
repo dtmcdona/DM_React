@@ -274,10 +274,12 @@ class Action extends React.Component {
               {this.state.function !== 'key_pressed' &&
                 this.state.click_type === 'point' &&
                 '(x,y):'}
-              {this.state.function !== 'key_pressed' &&
-                this.state.click_type === 'region' &&
+              {this.state.function === 'click_image_region' ||
+                (this.state.function !== 'key_pressed' &&
+                this.state.click_type === 'region') &&
                 'Top left (x,y):'}
-              {this.state.function !== 'key_pressed' && (
+              {this.state.function === 'click_image_region' ||
+                this.state.function !== 'key_pressed' && (
                 <div className='input-container'>
                   (
                   <input
@@ -300,11 +302,13 @@ class Action extends React.Component {
                   )
                 </div>
               )}
-              {this.state.function !== 'key_pressed' &&
-                this.state.click_type === 'region' &&
+              {this.state.function === 'click_image_region' ||
+                (this.state.function !== 'key_pressed' &&
+                this.state.click_type === 'region') &&
                 'Bottom right (x,y):'}
-              {this.state.function !== 'key_pressed' &&
-                this.state.click_type === 'region' && (
+              {this.state.function === 'click_image_region' ||
+                (this.state.function !== 'key_pressed' &&
+                this.state.click_type === 'region') && (
                   <div className='input-container'>
                     (
                     <input
