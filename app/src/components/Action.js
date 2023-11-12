@@ -58,7 +58,7 @@ class Action extends React.Component {
     if (String(this.state.images).length > 0)
       images = '"' + String(this.state.images).replace(',', '", "') + '"'
     let data =
-      '{"id": ' +
+      '{"id": "' +
       this.state.id +
       '", ' +
       '"function": "' +

@@ -1,19 +1,15 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import { default_image } from './constants'
-
-let screen_timer = 100
+import { useQuery } from '@tanstack/react-query'
 
 const Canvas = ({
   base_url,
   height,
   width,
   screen_fps,
-  screen_timer_max,
   screen_x_scale,
   screen_y_scale,
   snip_frame,
-  snip_prompt,
-  snip_prompt_index,
   snip_x1,
   snip_x2,
   snip_y1,
@@ -21,17 +17,30 @@ const Canvas = ({
   streaming,
 }) => {
   const canvas = useRef()
+  const { data: screenshot } = useQuery({
+    queryKey: ['screenshot'],
+    queryFn: () =>
+      fetch(`${base_url}screenshot`, {
+        method: 'GET',
+        cors: 'no-cors',
+        cache: 'no-cache',
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          Accepts: 'application/json',
+        },
+      }).then((res) => res.json()),
+    refetchInterval: 1000 / screen_fps,
+  })
+
   useEffect(() => {
     const context = canvas.current.getContext('2d')
     draw(context)
   })
-  const logging = false
-  let image_data = default_image
 
   const draw = (context) => {
     let img = new Image(width, height)
     if (typeof snip_frame == 'string' && snip_frame !== '') {
-      context.clearRect(0, 0, width, 32)
       if (snip_x1 !== 0 && snip_y1 !== 0) {
         context.clearRect(0, 0, width, screen_y_scale * snip_y1)
         context.clearRect(0, 0, screen_x_scale * snip_x1, height)
@@ -41,46 +50,13 @@ const Canvas = ({
         context.clearRect(screen_x_scale * snip_x2, 0, width, height)
       }
       context.drawImage(img, 0, 0, width, height)
-      let prefix = 'data:image/png;base64,'
-      img.src = prefix + snip_frame
-      context.font = '20pt Sans'
-      context.fillStyle = 'white'
-      context.textAlign = 'center'
-      context.fillText(snip_prompt, width / 2, 24)
-    } else if (streaming && screen_timer > 0) {
+      img.src = `data:image/png;base64,${snip_frame}`
+    } else if (streaming) {
+      console.log('Rendering image')
       img.onload = function () {
         context.drawImage(img, 0, 0, img.width, img.height)
       }
-      if (snip_prompt_index === 0) screen_timer--
-    } else if (streaming) {
-      let refresh_rate = screen_timer_max / screen_fps
-      let url = base_url + 'screenshot/'
-      let xhr = new XMLHttpRequest()
-      xhr.open('GET', url)
-
-      xhr.setRequestHeader('Accept', 'application/json')
-      xhr.setRequestHeader('Content-Type', 'application/json')
-      xhr.setRequestHeader('Access-Control-Allow-Origin', '*')
-
-      xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4) {
-          let json_data = JSON.parse(xhr.responseText)
-
-          image_data = json_data.data
-          if (logging) {
-            console.log(xhr.status)
-            console.log(xhr.responseText)
-            console.log(image_data)
-          }
-          img.onload = function () {
-            context.drawImage(img, 0, 0, img.width, img.height)
-          }
-          let prefix = 'data:image/png;base64,'
-          img.src = prefix + image_data
-        }
-      }
-      xhr.send()
-      screen_timer = refresh_rate
+      img.src = `data:image/png;base64,${screenshot.data}`
     } else {
       img.onload = function () {
         context.font = '40pt Sans'

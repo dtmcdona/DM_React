@@ -1,5 +1,4 @@
 import { Component } from 'react'
-import '../App.css'
 import Components from './components'
 import { connect } from 'react-redux'
 import {
@@ -10,6 +9,8 @@ import {
   settingsValueSet,
 } from '../actions'
 import Canvas from './Canvas'
+import SideBar from './SideBar'
+import CanvasConsole from './CanvasConsole'
 
 var task_id = ''
 var action_list = []
@@ -40,30 +41,30 @@ function Action(
   random_range,
   random_delay
 ) {
-  let dict = {}
-  dict['id'] = id
-  dict['function'] = func
-  dict['x1'] = x1
-  dict['y1'] = y1
-  dict['x2'] = x2
-  dict['y2'] = y2
-  dict['images'] = images
-  dict['image_conditions'] = image_conditions
-  dict['variables'] = variables
-  dict['variable_conditions'] = variable_conditions
-  dict['comparison_values'] = comparison_values
-  dict['time_delay'] = time_delay
-  dict['sleep_duration'] = sleep_duration
-  dict['key_pressed'] = key_pressed
-  dict['true_case'] = true_case
-  dict['false_case'] = false_case
-  dict['error_case'] = error_case
-  dict['num_repeats'] = num_repeats
-  dict['random_path'] = random_path
-  dict['random_range'] = random_range
-  dict['random_delay'] = random_delay
-  dict['component'] = 'action'
-  return dict
+  return {
+    id: id,
+    function: func,
+    x1: x1,
+    y1: y1,
+    x2: x2,
+    y2: y2,
+    images: images,
+    image_conditions: image_conditions,
+    variables: variables,
+    variable_conditions: variable_conditions,
+    comparison_values: comparison_values,
+    time_delay: time_delay,
+    sleep_duration: sleep_duration,
+    key_pressed: key_pressed,
+    true_case: true_case,
+    false_case: false_case,
+    error_case: error_case,
+    num_repeats: num_repeats,
+    random_path: random_path,
+    random_range: random_range,
+    random_delay: random_delay,
+    component: 'action',
+  }
 }
 
 const get_request_api = (path) => {
@@ -98,6 +99,10 @@ class Recorder extends Component {
     this.getTimeDelta()
     let function_params = ''
     if (action_type === 'click') {
+      let temp = function_params
+      function_params =
+        temp + ', "x1": ' + this.state.x + ', "y1": ' + this.state.y
+    } else if (action_type === 'move_to') {
       let temp = function_params
       function_params =
         temp + ', "x1": ' + this.state.x + ', "y1": ' + this.state.y
@@ -363,9 +368,9 @@ class Recorder extends Component {
           }
         }
       } else if (this.props.streaming && this.props.recording) {
-        this.create_action('click')
+        this.create_action(this.props.mouse_mode)
         if (this.state.logging) {
-          console.log('Mouse click sent to Fast API')
+          console.log(`Mouse ${this.props.mouse_mode} sent to Fast API`)
         }
       }
       if (
@@ -473,15 +478,18 @@ class Recorder extends Component {
   }
 
   handleDeleteAction = (event) => {
-    console.log('Before delete', action_list)
     const id = event.target.name
     if (this.state.logging) {
       console.log('Delete action:' + id)
     }
-    var temp_id = 0
-    let action_deleted = false
-    action_list.splice(id, 1)
-    console.log('After delete', action_list)
+    let index = 0
+    for (let i = 0; i < action_list.length; i++) {
+      if (action_list[i].id === id) {
+        index = i
+        break
+      }
+    }
+    action_list.splice(index, 1)
     get_request_api('delete-action/' + id)
   }
 
@@ -495,23 +503,31 @@ class Recorder extends Component {
   render() {
     return (
       <div onMouseMove={this.handleMouseMove} onClick={this.handleClick}>
-        <Canvas
-          base_url={this.props.base_url}
-          height={this.props.screen_height * this.props.screen_y_scale}
-          width={this.props.screen_width * this.props.screen_x_scale}
-          screen_fps={this.props.screen_fps}
-          screen_timer_max={this.props.screen_timer_max}
-          screen_x_scale={this.props.screen_x_scale}
-          screen_y_scale={this.props.screen_y_scale}
-          snip_frame={this.props.snip_frame}
-          snip_prompt={this.props.snip_prompt[this.props.snip_prompt_index]}
-          snip_prompt_index={this.props.snip_prompt_index}
-          snip_x1={this.props.snip_x1}
-          snip_x2={this.props.snip_x2}
-          snip_y1={this.props.snip_y1}
-          snip_y2={this.props.snip_y2}
-          streaming={this.props.streaming}
-        />
+        <div className='canvas--group'>
+          <div className='canvas--view'>
+            <Canvas
+              base_url={this.props.base_url}
+              height={this.props.screen_height * this.props.screen_y_scale}
+              width={this.props.screen_width * this.props.screen_x_scale}
+              screen_fps={this.props.screen_fps}
+              screen_x_scale={this.props.screen_x_scale}
+              screen_y_scale={this.props.screen_y_scale}
+              snip_frame={this.props.snip_frame}
+              snip_x1={this.props.snip_x1}
+              snip_x2={this.props.snip_x2}
+              snip_y1={this.props.snip_y1}
+              snip_y2={this.props.snip_y2}
+              streaming={this.props.streaming}
+            />
+            <CanvasConsole />
+          </div>
+          <div className='canvas--toolbox'>
+            <SideBar
+              lastActionId={action_list.at(-1)?.id}
+              handleDeleteAction={this.handleDeleteAction}
+            />
+          </div>
+        </div>
         <div className='actions--section'>
           <h2>Task</h2>
           <input
@@ -560,6 +576,7 @@ const mapStateToProps = (state) => {
     recording: state.controls.recording,
     remote_controlling: state.controls.remote_controlling,
     streaming: state.controls.streaming,
+    mouse_mode: state.controls.mouse_mode,
     //CanvasData
     delta_time: state.canvasData.delta_time,
     key_pressed: state.canvasData.key_pressed,
@@ -570,7 +587,6 @@ const mapStateToProps = (state) => {
     screen_x_scale: state.canvasData.screen_x_scale,
     screen_y_scale: state.canvasData.screen_y_scale,
     snip_frame: state.canvasData.snip_frame,
-    snip_prompt: state.canvasData.snip_prompt,
     snip_prompt_index: state.canvasData.snip_prompt_index,
     snip_x1: state.canvasData.snip_x1,
     snip_x2: state.canvasData.snip_x2,

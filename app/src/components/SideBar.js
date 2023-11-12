@@ -1,0 +1,91 @@
+import { FaMousePointer, FaMouse, FaUndo, FaRegFileImage } from 'react-icons/fa'
+import { connect } from 'react-redux'
+import { canvasDataReset, canvasDataSet, controlToggle } from '../actions'
+import React from 'react'
+
+class SideBar extends React.Component {
+  handleMouseModeClick = () => {
+    this.props.controlToggle('MOUSE_MODE', 'click')
+  }
+
+  handleMouseModeMove = () => {
+    this.props.controlToggle('MOUSE_MODE', 'move_to')
+  }
+
+  handleSnipImage = async () => {
+    if (!this.props.snipping_image) {
+      let url = this.props.base_url + 'screenshot/'
+      let response = await fetch(url)
+      if (response.ok) {
+        let json = await response.json()
+        this.props.canvasDataSet('SNIP_FRAME', json.data)
+      } else {
+        alert('HTTP-Error: ' + response.status)
+      }
+    } else {
+      this.props.canvasDataReset()
+    }
+  }
+
+  render() {
+    return (
+      <>
+        <h4>Actions:</h4>
+        <ul>
+          <li>
+            <button onClick={this.handleMouseModeClick}>
+              {<FaMousePointer size='16' />}
+              <br />
+              {this.props.mouse_mode === 'click'
+                ? '(Active) Click Mouse'
+                : 'Click Mouse'}
+            </button>
+          </li>
+          <li>
+            <button onClick={this.handleMouseModeMove}>
+              {<FaMouse size='16' />}
+              <br />
+              {this.props.mouse_mode === 'move_to'
+                ? '(Active) Move Mouse'
+                : 'Move Mouse'}
+            </button>
+          </li>
+          <li>
+            <button type='button' onClick={this.handleSnipImage}>
+              <FaRegFileImage size='16' />
+              <br />
+              Snip image
+            </button>
+          </li>
+        </ul>
+        <h4>Options:</h4>
+        <ul>
+          <li>
+            <button
+              name={this.props.lastActionId}
+              onClick={this.props.handleDeleteAction}
+            >
+              {<FaUndo size='16' />}
+              <br />
+              {'Undo Action'}
+            </button>
+          </li>
+        </ul>
+      </>
+    )
+  }
+}
+
+const mapStateToProps = (state) => {
+  return {
+    mouse_mode: state.controls.mouse_mode,
+    snipping_image: state.canvasData.snipping_image,
+    base_url: state.settings.base_url,
+  }
+}
+
+export default connect(mapStateToProps, {
+  controlToggle,
+  canvasDataReset,
+  canvasDataSet,
+})(SideBar)

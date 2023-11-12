@@ -5,12 +5,13 @@ const initialControls = {
   recording: false,
   remote_controlling: false,
   streaming: false,
+  mouse_mode: 'click',
 }
 
 const initialCanvasData = {
   delta_time: 0,
   key_pressed: '',
-  screen_fps: 1,
+  screen_fps: 60,
   screen_width: 1920,
   screen_height: 1080,
   screen_timer_max: 100,
@@ -54,6 +55,8 @@ const controlReducer = (controls = initialControls, action) => {
       return { ...controls, remote_controlling: action.payload }
     case 'STREAM_TOGGLE':
       return { ...controls, streaming: action.payload }
+    case 'MOUSE_MODE_TOGGLE':
+      return { ...controls, mouse_mode: action.payload }
   }
   return controls
 }

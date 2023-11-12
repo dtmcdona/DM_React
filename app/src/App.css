@@ -2,22 +2,6 @@
   text-align: center;
 }
 
-.App-logo {
-  animation: App-logo-spin infinite 20s linear;
-  height: 80px;
-}
-
-.App-header {
-  background-color: #222;
-  height: 150px;
-  padding: 20px;
-  color: white;
-}
-
-.App-intro {
-  font-size: large;
-}
-
 nav {
   height: 70px;
   padding: 0px;
@@ -27,8 +11,6 @@ nav {
   background-color: #284b67;
   position: relative;
   z-index: 10;
-  box-shadow: rgba(50, 50, 93, 0.25) 0px 30px 60px -12px,
-    rgba(0, 0, 0, 0.3) 0px 18px 36px -18px;
   box-shadow: rgba(50, 50, 93, 0.25) 0px 30px 60px -12px inset,
     rgba(0, 0, 0, 0.3) 0px 18px 36px -18px inset;
 }
@@ -38,14 +20,38 @@ canvas {
     rgba(0, 0, 0, 0.3) 0px 18px 36px -18px;
 }
 
+.canvas--group {
+  display: flex;
+  justify-content: space-between;
+}
+
+.canvas--view {
+  border-radius: 3px;
+}
+
+.canvas--toolbox {
+  border-radius: 3px;
+  position: absolute;
+  right: 0;
+}
+
+.canvas--console {
+  color: #61dafb;
+  background-color: #284b67;
+  border: 1px solid rgba(97, 218, 251, 0.25);
+  text-shadow: 2px 2px 3px rgba(0, 0, 57, 0.25);
+  border-radius: 16px;
+  padding-left: 10px;
+}
+
 .nav--options {
+  border-radius: 8px;
   height: 70px;
   padding: 12px;
   margin: 0px;
   color: #61dafb;
   font-size: 27px;
   font-weight: 900;
-  border: none;
   outline: none;
   background-color: #284b67;
   text-shadow: 2px 2px 3px rgba(0, 0, 57, 0.25);
@@ -83,11 +89,13 @@ table {
 }
 
 th {
+  border-radius: 16px;
   border-bottom: 1px solid #24435c;
   text-shadow: 2px 2px 3px rgba(0, 0, 57, 0.25);
 }
 
 tr {
+  border-radius: 16px;
   box-shadow: rgba(50, 50, 93, 0.25) 0px 12px 24px -12px inset,
     rgba(27, 51, 70, 0.9) 0px 12px 24px -12px inset;
 }
@@ -96,27 +104,40 @@ td {
   text-align: center;
 }
 
+h4 {
+  text-align: left;
+}
+
+li {
+  padding: 2px;
+  list-style-type: none;
+  overflow: hidden;
+  border: none;
+  border-radius: 10px;
+  width: 60%;
+}
+
+ul {
+  padding: 0px;
+  margin: 0px;
+}
+
 button,
 fieldset,
 input,
 legend,
 select,
 textarea {
+  text-align: center;
+  padding-left: 8px;
+  padding-right: 10px;
+  border-radius: 16px;
   color: #61dafb;
   background-color: #284b67;
-  border: none;
+  border: 1px solid rgba(97, 218, 251, 0.25);
   text-shadow: 2px 2px 3px rgba(0, 0, 57, 0.25);
 }
 
 form {
   text-align: left;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
 }

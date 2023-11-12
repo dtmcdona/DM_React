@@ -21,7 +21,7 @@ class Menu extends React.Component {
                   input_type = 'number'
                 } else if (typeof v === 'boolean') {
                   return (
-                    <tr>
+                    <tr key={k}>
                       <th>
                         <label>{captialized_key}</label>
                       </th>
@@ -36,7 +36,7 @@ class Menu extends React.Component {
                   )
                 }
                 return (
-                  <tr>
+                  <tr key={k}>
                     <th>
                       <label>{captialized_key}</label>
                     </th>
