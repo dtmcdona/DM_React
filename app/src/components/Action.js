@@ -177,7 +177,12 @@ class Action extends React.Component {
                       onChange={this.handleChangeCondition}
                     >
                       {action_constants.conditionals.map((option) => (
-                        <option value={option.value}>{option.label}</option>
+                        <option
+                          key={`${this.state.id}-${option.label}`}
+                          value={option.value}
+                        >
+                          {option.label}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -201,7 +206,12 @@ class Action extends React.Component {
                       onChange={this.handleChangeConditionTrue}
                     >
                       {action_constants.result_functions.map((option) => (
-                        <option value={option.value}>{option.label}</option>
+                        <option
+                          key={`${this.state.id}-${option.label}`}
+                          value={option.value}
+                        >
+                          {option.label}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -212,7 +222,12 @@ class Action extends React.Component {
                       onChange={this.handleChangeConditionFalse}
                     >
                       {action_constants.result_functions.map((option) => (
-                        <option value={option.value}>{option.label}</option>
+                        <option
+                          key={`${this.state.id}-${option.label}`}
+                          value={option.value}
+                        >
+                          {option.label}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -242,7 +257,12 @@ class Action extends React.Component {
                   onChange={this.handleChangeFunction}
                 >
                   {action_constants.action_functions.map((option) => (
-                    <option value={option.value}>{option.label}</option>
+                    <option
+                      key={`${this.state.id}-${option.label}`}
+                      value={option.value}
+                    >
+                      {option.label}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -266,7 +286,12 @@ class Action extends React.Component {
                     onChange={this.handleChangeClickType}
                   >
                     {action_constants.click_types.map((option) => (
-                      <option value={option.value}>{option.label}</option>
+                      <option
+                        key={`${this.state.id}-${option.label}`}
+                        value={option.value}
+                      >
+                        {option.label}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -276,61 +301,61 @@ class Action extends React.Component {
                 '(x,y):'}
               {this.state.function === 'click_image_region' ||
                 (this.state.function !== 'key_pressed' &&
-                this.state.click_type === 'region') &&
-                'Top left (x,y):'}
+                  this.state.click_type === 'region' &&
+                  'Top left (x,y):')}
               {this.state.function === 'click_image_region' ||
-                this.state.function !== 'key_pressed' && (
-                <div className='input-container'>
-                  (
-                  <input
-                    type='text'
-                    size='10'
-                    value={this.state.x1}
-                    onChange={(event) =>
-                      this.setState({ x1: event.target.value })
-                    }
-                  />
-                  ,
-                  <input
-                    type='text'
-                    size='10'
-                    value={this.state.y1}
-                    onChange={(event) =>
-                      this.setState({ y1: event.target.value })
-                    }
-                  />
-                  )
-                </div>
-              )}
-              {this.state.function === 'click_image_region' ||
-                (this.state.function !== 'key_pressed' &&
-                this.state.click_type === 'region') &&
-                'Bottom right (x,y):'}
-              {this.state.function === 'click_image_region' ||
-                (this.state.function !== 'key_pressed' &&
-                this.state.click_type === 'region') && (
+                (this.state.function !== 'key_pressed' && (
                   <div className='input-container'>
                     (
                     <input
                       type='text'
                       size='10'
-                      value={this.state.x2}
+                      value={this.state.x1}
                       onChange={(event) =>
-                        this.setState({ x2: event.target.value })
+                        this.setState({ x1: event.target.value })
                       }
                     />
                     ,
                     <input
                       type='text'
                       size='10'
-                      value={this.state.y2}
+                      value={this.state.y1}
                       onChange={(event) =>
-                        this.setState({ y2: event.target.value })
+                        this.setState({ y1: event.target.value })
                       }
                     />
                     )
                   </div>
-                )}
+                ))}
+              {this.state.function === 'click_image_region' ||
+                (this.state.function !== 'key_pressed' &&
+                  this.state.click_type === 'region' &&
+                  'Bottom right (x,y):')}
+              {this.state.function === 'click_image_region' ||
+                (this.state.function !== 'key_pressed' &&
+                  this.state.click_type === 'region' && (
+                    <div className='input-container'>
+                      (
+                      <input
+                        type='text'
+                        size='10'
+                        value={this.state.x2}
+                        onChange={(event) =>
+                          this.setState({ x2: event.target.value })
+                        }
+                      />
+                      ,
+                      <input
+                        type='text'
+                        size='10'
+                        value={this.state.y2}
+                        onChange={(event) =>
+                          this.setState({ y2: event.target.value })
+                        }
+                      />
+                      )
+                    </div>
+                  ))}
               Time delay:
               <div className='input-container'>
                 <input

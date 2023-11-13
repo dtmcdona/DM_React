@@ -158,6 +158,7 @@ class Recorder extends Component {
     xhr.onreadystatechange = function () {
       if (xhr.readyState === 4) {
         let json_data = JSON.parse(xhr.responseText)
+        console.log(json_data)
         action_list.push(
           new Action(
             json_data.id,
@@ -554,6 +555,7 @@ class Recorder extends Component {
               </tr>
               {action_list.map((block) => (
                 <Components
+                  key={`${block.id}-component`}
                   block={block}
                   event_func={this.handleDeleteAction}
                 />
