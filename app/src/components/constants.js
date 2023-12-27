@@ -21,6 +21,10 @@ export const action_constants = {
       value: 'move_to_image',
     },
     {
+      label: 'Drag mouse to',
+      value: 'drag_to',
+    },
+    {
       label: 'Keyboard button pressed',
       value: 'key_pressed',
     },
@@ -109,17 +113,17 @@ export const action_constants = {
       value: 'repeat',
     },
   ],
-  click_types: [
-    {
-      label: 'at point',
-      value: 'point',
-    },
-    {
-      label: 'within region',
-      value: 'region',
-    },
-  ],
 }
+
+export const snip_prompts = [
+  '',
+  'Click at the top left corner of the snip',
+  'Click at the bottom right corner of the snip',
+  'Press (1) to create action, (2) to save snip, and (3) to discard snip',
+  'Create action to: (1) click image or (2) move mouse to image (3) capture text',
+  'Click the starting location for the mouse drag',
+  'Click the ending location the mouse drag',
+]
 
 export const default_image = {
   data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAKnRFWHRDcmVhdGlvbiBUaW1lAFNhIDQgTWFpIDIwMDIgMjM6MjA6MzYgKzAxMDBC3wLLAAAAB3RJTUUH0gUEFRUrVURxbAAAAAlwSFlzAAAK8AAACvABQqw0mAAAAARnQU1BAACxjwv8YQUAAAAMSURBVHjaY+CQbQEAANoAqj1ML8MAAAAASUVORK5CYII=',

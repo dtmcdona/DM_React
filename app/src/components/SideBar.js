@@ -1,6 +1,17 @@
-import { FaMousePointer, FaMouse, FaUndo, FaRegFileImage } from 'react-icons/fa'
+import {
+  FaMousePointer,
+  FaMouse,
+  FaUndo,
+  FaRegFileImage,
+  FaRoute,
+} from 'react-icons/fa'
 import { connect } from 'react-redux'
-import { canvasDataReset, canvasDataSet, controlToggle } from '../actions'
+import {
+  canvasDataReset,
+  canvasDataSet,
+  canvasSetCoords,
+  controlToggle,
+} from '../actions'
 import React from 'react'
 
 class SideBar extends React.Component {
@@ -10,6 +21,11 @@ class SideBar extends React.Component {
 
   handleMouseModeMove = () => {
     this.props.controlToggle('MOUSE_MODE', 'move_to')
+  }
+
+  handleMouseModeDrag = () => {
+    this.props.canvasSetCoords(5, 0, 0, 0, 0)
+    this.props.controlToggle('MOUSE_MODE', 'drag_to')
   }
 
   handleSnipImage = async () => {
@@ -51,6 +67,15 @@ class SideBar extends React.Component {
             </button>
           </li>
           <li>
+            <button onClick={this.handleMouseModeDrag}>
+              {<FaRoute size='16' />}
+              <br />
+              {this.props.mouse_mode === 'drag_to'
+                ? '(Active) Drag Mouse'
+                : 'Drag Mouse'}
+            </button>
+          </li>
+          <li>
             <button type='button' onClick={this.handleSnipImage}>
               <FaRegFileImage size='16' />
               <br />
@@ -88,4 +113,5 @@ export default connect(mapStateToProps, {
   controlToggle,
   canvasDataReset,
   canvasDataSet,
+  canvasSetCoords,
 })(SideBar)

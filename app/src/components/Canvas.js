@@ -52,7 +52,6 @@ const Canvas = ({
       context.drawImage(img, 0, 0, width, height)
       img.src = `data:image/png;base64,${snip_frame}`
     } else if (streaming) {
-      console.log('Rendering image')
       img.onload = function () {
         context.drawImage(img, 0, 0, img.width, img.height)
       }

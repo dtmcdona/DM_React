@@ -1,4 +1,5 @@
 import { combineReducers } from 'redux'
+import { snip_prompts } from '../components/constants'
 
 const initialControls = {
   playing_back: false,
@@ -19,14 +20,7 @@ const initialCanvasData = {
   screen_y_scale: 0.5,
   snip_collection: [],
   snip_frame: '',
-  snip_prompt: [
-    '',
-    'Click at the top left corner of the snip',
-    'Click at the bottom right corner of the snip',
-    'Press (1) to create action, (2) to save snip, and (3) to discard snip',
-    'Create action to: (1) click image or (2) move mouse to image (3) capture text',
-    'Snip saved!',
-  ],
+  snip_prompt: snip_prompts,
   snip_prompt_index: 0,
   snip_x1: 0,
   snip_y1: 0,
