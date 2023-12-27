@@ -68,7 +68,7 @@ function Action(
 }
 
 const get_request_api = (path) => {
-  let url = base_url + path
+  let url = `${base_url}${path}`
   let xhr = new XMLHttpRequest()
   xhr.open('GET', url)
 
@@ -98,51 +98,34 @@ class Recorder extends Component {
   create_action = (action_type) => {
     this.getTimeDelta()
     let function_params = ''
-    if (action_type === 'click') {
-      let temp = function_params
-      function_params =
-        temp + ', "x1": ' + this.state.x + ', "y1": ' + this.state.y
-    } else if (action_type === 'move_to') {
-      let temp = function_params
-      function_params =
-        temp + ', "x1": ' + this.state.x + ', "y1": ' + this.state.y
+    if (action_type === 'click' || action_type === 'move_to') {
+      function_params = `, "x1": ${this.state.x}, "y1": ${this.state.y}`
+    } else if (action_type === 'drag_to') {
+      function_params = `, "x1": ${this.props.snip_x1}, "y1": ${this.props.snip_y1}, "x2": ${this.props.snip_x2}, "y2": ${this.props.snip_y2}`
     } else if (
       action_type === 'click_image' ||
       action_type === 'move_to_image'
     ) {
-      let temp = function_params
-      function_params =
-        temp + ', "images": ["' + snip_list[snip_list.length - 1] + '"]'
+      function_params = `, "images": ["${snip_list[snip_list.length - 1]}"]`
     } else if (action_type === 'key_pressed') {
-      let temp = function_params
-      function_params =
-        temp + ', "key_pressed": "' + this.props.key_pressed + '"'
+      function_params = `, "key_pressed": "${this.props.key_pressed}"`
     }
     if (this.props.random_enabled) {
       if (this.props.random_mouse_path) {
         let temp = function_params
-        function_params = temp + ', "random_path": true'
+        function_params = `${temp}, "random_path": true`
       }
       if (this.props.random_mouse_position) {
         let temp = function_params
-        function_params =
-          temp + ', "random_range": ' + this.props.random_mouse_range
+        function_params = `${temp}, "random_range": ${this.props.random_mouse_range}`
       }
       if (this.props.random_mouse_delay) {
         let temp = function_params
-        function_params =
-          temp + ', "random_delay": ' + this.props.random_mouse_max_delay
+        function_params = `${temp}, "random_delay": ${this.props.random_mouse_max_delay}`
       }
     }
 
-    let data =
-      '{"function": "' +
-      action_type +
-      '"' +
-      function_params +
-      ', "time_delay": ' +
-      this.props.delta_time +
-      '}'
+    let data = `{"function": "${action_type}"${function_params}, "time_delay": ${this.props.delta_time}}`
 
     const url = this.props.remote_controlling
       ? `${base_url}add-execute-action/`
@@ -190,21 +173,10 @@ class Recorder extends Component {
     xhr.send(data)
   }
 
-  capture_screen_data = (action_type) => {
-    let url = ''
-    if (action_type === 'store_value') {
-      url =
-        base_url +
-        'capture-screen-data/' +
-        this.props.snip_x1 +
-        '/' +
-        this.props.snip_y1 +
-        '/' +
-        this.props.snip_x2 +
-        '/' +
-        this.props.snip_y2 +
-        '/-1'
-    }
+  capture_screen_data = () => {
+    let url =
+      `${base_url}capture-screen-data/${this.props.snip_x1}/${this.props.snip_y1}` +
+      `/${this.props.snip_x2}/${this.props.snip_y2}/-1`
 
     let xhr = new XMLHttpRequest()
     xhr.open('GET', url)
@@ -241,11 +213,6 @@ class Recorder extends Component {
             json_data.random_delay
           )
         )
-        if (this.state.logging) {
-          console.log(action_list)
-          console.log(xhr.status)
-          console.log(xhr.responseText)
-        }
       }
     }
 
@@ -264,13 +231,12 @@ class Recorder extends Component {
   handleSaveTask = () => {
     let url = ''
     if (task_id === '') {
-      url = base_url + 'add-task'
+      url = `${base_url}add-task`
     } else {
-      url = base_url + 'update-task/' + task_id
+      url = `${base_url}update-task/${task_id}`
     }
     let action_id_list = ''
     for (let i = 0; i < action_list.length; i++) {
-      console.log(action_list[i].id)
       if (i === 0) {
         action_id_list = action_id_list + `"${action_list[i].id}"`
       } else {
@@ -278,12 +244,7 @@ class Recorder extends Component {
       }
     }
 
-    let data =
-      '{"id": "' +
-      this.state.task_id +
-      '", "action_id_list": [' +
-      action_id_list +
-      ']}'
+    let data = `{"id": "${this.state.task_id}", "action_id_list": [${action_id_list}]}`
 
     let xhr = new XMLHttpRequest()
     xhr.open('POST', url)
@@ -342,7 +303,7 @@ class Recorder extends Component {
       y: event.clientY / this.props.screen_y_scale - y_offset,
     })
     if (this.state.logging) {
-      console.log('Mouse clicked (' + this.state.x + ', ' + this.state.y + ')')
+      console.log(`Mouse clicked (${this.state.x}, ${this.state.y})`)
     }
     if (
       this.state.x >= 0 &&
@@ -350,7 +311,31 @@ class Recorder extends Component {
       this.state.y >= 0 &&
       this.state.y <= this.props.screen_height
     ) {
-      if (this.props.snipping_image) {
+      if (this.props.mouse_mode === 'drag_to') {
+        if (this.props.snip_x1 === 0) {
+          this.props.canvasSetCoords(6, this.state.x, this.state.y, 0, 0)
+        } else if (this.props.snip_x2 === 0) {
+          this.props.canvasSetCoords(
+            0,
+            this.props.snip_x1,
+            this.props.snip_y1,
+            this.state.x,
+            this.state.y
+          )
+          if (this.props.recording) {
+            //Create drag_to action
+            this.create_action('drag_to')
+          } else {
+            get_request_api(
+              `mouse-drag/${this.props.snip_x1}/${this.props.snip_y1}` +
+                `/${this.state.x}/${this.state.y}`
+            )
+          }
+          //Clear data
+          this.props.canvasDataReset(false)
+          this.props.controlToggle('MOUSE_MODE', 'click')
+        }
+      } else if (this.props.snipping_image) {
         if (this.props.snip_x1 === 0) {
           this.props.canvasSetCoords(2, this.state.x, this.state.y, 0, 0)
           if (this.state.logging) {
@@ -379,7 +364,11 @@ class Recorder extends Component {
         this.props.streaming &&
         this.props.remote_controlling
       ) {
-        get_request_api('mouse-click/' + this.state.x + '/' + this.state.y)
+        if (this.props.mouse_mode === 'click') {
+          get_request_api(`mouse-click/${this.state.x}/${this.state.y}`)
+        } else if (this.props.mouse_mode === 'move') {
+          get_request_api(`mouse-move/${this.state.x}/${this.state.y}`)
+        }
       }
     }
   }
@@ -401,18 +390,9 @@ class Recorder extends Component {
           this.props.snip_y2 !== 0
         ) {
           let data = '{"base64str": "' + this.props.snip_frame + '"}'
-          console.log(data)
           let url =
-            base_url +
-            'screen-snip/' +
-            this.props.snip_x1 +
-            '/' +
-            this.props.snip_y1 +
-            '/' +
-            this.props.snip_x2 +
-            '/' +
-            this.props.snip_y2 +
-            '/'
+            `${base_url}screen-snip/${this.props.snip_x1}/${this.props.snip_y1}/` +
+            `${this.props.snip_x2}/${this.props.snip_y2}/`
 
           let xhr = new XMLHttpRequest()
           xhr.open('POST', url)
@@ -464,7 +444,6 @@ class Recorder extends Component {
       this.state.y <= this.props.screen_height
     ) {
       if (this.props.streaming && this.props.recording) {
-        console.log('Keypress sent to Fast API')
         this.props.canvasDataSet('KEY_PRESSED', String(event.key))
         this.create_action('key_pressed')
       }
@@ -569,9 +548,6 @@ class Recorder extends Component {
 }
 
 const mapStateToProps = (state) => {
-  //console.log('Controls:', state.controls)
-  //console.log('CanvasData:', state.canvasData)
-  //console.log('Settings', state.settings)
   return {
     //Controls
     playing_back: state.controls.playing_back,

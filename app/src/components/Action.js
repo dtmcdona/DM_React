@@ -8,7 +8,6 @@ class Action extends React.Component {
     this.handleChangeCondition = this.handleChangeCondition.bind(this)
     this.handleChangeConditionTrue = this.handleChangeConditionTrue.bind(this)
     this.handleChangeConditionFalse = this.handleChangeConditionFalse.bind(this)
-    this.handleChangeClickType = this.handleChangeClickType.bind(this)
     this.state = {
       id: props.block.id,
       function: props.block.function,
@@ -32,8 +31,26 @@ class Action extends React.Component {
       random_range: props.block.random_range,
       random_delay: props.block.random_delay,
       condition: 'none',
-      click_type: 'point',
     }
+    this.point_functions = ['click', 'move_to', 'drag_to']
+    this.region_text_functions = ['capture_screen_data', 'click_image_region']
+    this.region_functions = [
+      'capture_screen_data',
+      'click_image_region',
+      'drag_to',
+    ]
+    this.position_functions = [
+      'click',
+      'move_to',
+      'drag_to',
+      'capture_screen_data',
+      'click_image_region',
+    ]
+    this.image_functions = [
+      'click_image',
+      'move_to_image',
+      'click_image_region',
+    ]
   }
 
   updateAction = () => {
@@ -58,67 +75,26 @@ class Action extends React.Component {
     if (String(this.state.images).length > 0)
       images = '"' + String(this.state.images).replace(',', '", "') + '"'
     let data =
-      '{"id": "' +
-      this.state.id +
-      '", ' +
-      '"function": "' +
-      this.state.function +
-      '", ' +
-      '"x1": ' +
-      this.state.x1 +
-      ', ' +
-      '"x2": ' +
-      this.state.x2 +
-      ', ' +
-      '"y1": ' +
-      this.state.y1 +
-      ', ' +
-      '"y2": ' +
-      this.state.y2 +
-      ', ' +
-      '"images": [' +
-      images +
-      '], ' +
-      '"image_conditions": [' +
-      this.state.image_conditions +
-      '], ' +
-      '"variables": [' +
-      this.state.variables +
-      '], ' +
-      '"variable_conditions": [' +
-      this.state.variable_conditions +
-      '], ' +
-      '"time_delay": ' +
-      this.state.time_delay +
-      ', ' +
-      '"sleep_duration": ' +
-      this.state.sleep_duration +
-      ', ' +
-      '"key_pressed": "' +
-      this.state.key_pressed +
-      '", ' +
-      '"true_case": "' +
-      this.state.true_case +
-      '", ' +
-      '"false_case": "' +
-      this.state.false_case +
-      '", ' +
-      '"error_case": "' +
-      this.state.error_case +
-      '", ' +
-      '"num_repeats": ' +
-      this.state.num_repeats +
-      ', ' +
-      '"random_path": ' +
-      this.state.random_path +
-      ', ' +
-      '"random_range": ' +
-      this.state.random_range +
-      ', ' +
-      '"random_delay": ' +
-      this.state.random_delay +
-      '}'
-    console.log(data)
+      `{"id": "${this.state.id}", ` +
+      `"function": "${this.state.function}", ` +
+      `"x1": ${this.state.x1}, ` +
+      `"x2": ${this.state.x2}, ` +
+      `"y1": ${this.state.y1}, ` +
+      `"y2": ${this.state.y2}, ` +
+      `"images": [${images}], ` +
+      `"image_conditions": [${this.state.image_conditions}], ` +
+      `"variables": [${this.state.variables}], ` +
+      `"variable_conditions": [${this.state.variable_conditions}], ` +
+      `"time_delay": ${this.state.time_delay}, ` +
+      `"sleep_duration": ${this.state.sleep_duration}, ` +
+      `"key_pressed": "${this.state.key_pressed}", ` +
+      `"true_case": "${this.state.true_case}", ` +
+      `"false_case": "${this.state.false_case}", ` +
+      `"error_case": "${this.state.error_case}", ` +
+      `"num_repeats": ${this.state.num_repeats}, ` +
+      `"random_path": ${this.state.random_path}, ` +
+      `"random_range": ${this.state.random_range}, ` +
+      `"random_delay": ${this.state.random_delay}}`
 
     let url = base_url + 'update-action/' + this.state.id
 
@@ -156,10 +132,6 @@ class Action extends React.Component {
 
   handleChangeConditionFalse(e) {
     this.setState({ false_case: e.target.value })
-  }
-
-  handleChangeClickType(e) {
-    this.setState({ click_type: e.target.value })
   }
 
   render() {
@@ -279,83 +251,56 @@ class Action extends React.Component {
                   />
                 </div>
               )}
-              {this.state.function !== 'key_pressed' && (
-                <div className='select-container'>
-                  <select
-                    value={this.state.click_type}
-                    onChange={this.handleChangeClickType}
-                  >
-                    {action_constants.click_types.map((option) => (
-                      <option
-                        key={`${this.state.id}-${option.label}`}
-                        value={option.value}
-                      >
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
+              {this.position_functions.includes(this.state.function) && (
+                <div className='input-container'>
+                  {this.point_functions.includes(this.state.function)
+                    ? '(x,y):'
+                    : 'Top left (x,y): ('}
+                  <input
+                    type='text'
+                    size='10'
+                    value={this.state.x1}
+                    onChange={(event) =>
+                      this.setState({ x1: event.target.value })
+                    }
+                  />
+                  ,
+                  <input
+                    type='text'
+                    size='10'
+                    value={this.state.y1}
+                    onChange={(event) =>
+                      this.setState({ y1: event.target.value })
+                    }
+                  />
+                  )
                 </div>
               )}
-              {this.state.function !== 'key_pressed' &&
-                this.state.click_type === 'point' &&
-                '(x,y):'}
-              {this.state.function === 'click_image_region' ||
-                (this.state.function !== 'key_pressed' &&
-                  this.state.click_type === 'region' &&
-                  'Top left (x,y):')}
-              {this.state.function === 'click_image_region' ||
-                (this.state.function !== 'key_pressed' && (
-                  <div className='input-container'>
-                    (
-                    <input
-                      type='text'
-                      size='10'
-                      value={this.state.x1}
-                      onChange={(event) =>
-                        this.setState({ x1: event.target.value })
-                      }
-                    />
-                    ,
-                    <input
-                      type='text'
-                      size='10'
-                      value={this.state.y1}
-                      onChange={(event) =>
-                        this.setState({ y1: event.target.value })
-                      }
-                    />
-                    )
-                  </div>
-                ))}
-              {this.state.function === 'click_image_region' ||
-                (this.state.function !== 'key_pressed' &&
-                  this.state.click_type === 'region' &&
-                  'Bottom right (x,y):')}
-              {this.state.function === 'click_image_region' ||
-                (this.state.function !== 'key_pressed' &&
-                  this.state.click_type === 'region' && (
-                    <div className='input-container'>
-                      (
-                      <input
-                        type='text'
-                        size='10'
-                        value={this.state.x2}
-                        onChange={(event) =>
-                          this.setState({ x2: event.target.value })
-                        }
-                      />
-                      ,
-                      <input
-                        type='text'
-                        size='10'
-                        value={this.state.y2}
-                        onChange={(event) =>
-                          this.setState({ y2: event.target.value })
-                        }
-                      />
-                      )
-                    </div>
-                  ))}
+              {this.region_functions.includes(this.state.function) && (
+                <div className='input-container'>
+                  {this.state.function === 'drag_to'
+                    ? 'to (x,y):'
+                    : 'Bottom right (x,y): ('}
+                  <input
+                    type='text'
+                    size='10'
+                    value={this.state.x2}
+                    onChange={(event) =>
+                      this.setState({ x2: event.target.value })
+                    }
+                  />
+                  ,
+                  <input
+                    type='text'
+                    size='10'
+                    value={this.state.y2}
+                    onChange={(event) =>
+                      this.setState({ y2: event.target.value })
+                    }
+                  />
+                  )
+                </div>
+              )}
               Time delay:
               <div className='input-container'>
                 <input
@@ -368,9 +313,9 @@ class Action extends React.Component {
                   required
                 />
               </div>
-              {this.state.function === 'click_image' && 'Images:'}
-              {this.state.function === 'click_image' && (
+              {this.image_functions.includes(this.state.function) && (
                 <div className='input-container'>
+                  Images:
                   <input
                     type='text'
                     value={this.state.images}
