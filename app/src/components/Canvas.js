@@ -31,6 +31,7 @@ const Canvas = ({
         },
       }).then((res) => res.json()),
     refetchInterval: 1000 / screen_fps,
+    enabled: streaming,
   })
 
   useEffect(() => {
@@ -51,7 +52,7 @@ const Canvas = ({
       }
       context.drawImage(img, 0, 0, width, height)
       img.src = `data:image/png;base64,${snip_frame}`
-    } else if (streaming) {
+    } else if (streaming && screenshot?.data) {
       img.onload = function () {
         context.drawImage(img, 0, 0, img.width, img.height)
       }

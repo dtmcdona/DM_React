@@ -5,6 +5,10 @@ export const action_constants = {
       value: 'click',
     },
     {
+      label: 'Click mouse right here',
+      value: 'click_right',
+    },
+    {
       label: 'Click on image',
       value: 'click_image',
     },

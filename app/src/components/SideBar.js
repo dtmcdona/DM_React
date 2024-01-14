@@ -4,6 +4,7 @@ import {
   FaUndo,
   FaRegFileImage,
   FaRoute,
+  FaRegArrowAltCircleRight,
 } from 'react-icons/fa'
 import { connect } from 'react-redux'
 import {
@@ -17,6 +18,10 @@ import React from 'react'
 class SideBar extends React.Component {
   handleMouseModeClick = () => {
     this.props.controlToggle('MOUSE_MODE', 'click')
+  }
+
+  handleMouseModeClickRight = () => {
+    this.props.controlToggle('MOUSE_MODE', 'click_right')
   }
 
   handleMouseModeMove = () => {
@@ -53,8 +58,17 @@ class SideBar extends React.Component {
               {<FaMousePointer size='16' />}
               <br />
               {this.props.mouse_mode === 'click'
-                ? '(Active) Click Mouse'
-                : 'Click Mouse'}
+                ? '(Active) Click Left'
+                : 'Click Left'}
+            </button>
+          </li>
+          <li>
+            <button onClick={this.handleMouseModeClickRight}>
+              {<FaRegArrowAltCircleRight size='16' />}
+              <br />
+              {this.props.mouse_mode === 'click_right'
+                ? '(Active) Click Right'
+                : 'Click Right'}
             </button>
           </li>
           <li>
