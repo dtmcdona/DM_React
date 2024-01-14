@@ -98,7 +98,11 @@ class Recorder extends Component {
   create_action = (action_type) => {
     this.getTimeDelta()
     let function_params = ''
-    if (action_type === 'click' || action_type === 'move_to') {
+    if (
+      action_type === 'click' ||
+      action_type === 'click_right' ||
+      action_type === 'move_to'
+    ) {
       function_params = `, "x1": ${this.state.x}, "y1": ${this.state.y}`
     } else if (action_type === 'drag_to') {
       function_params = `, "x1": ${this.props.snip_x1}, "y1": ${this.props.snip_y1}, "x2": ${this.props.snip_x2}, "y2": ${this.props.snip_y2}`
@@ -365,7 +369,9 @@ class Recorder extends Component {
         this.props.remote_controlling
       ) {
         if (this.props.mouse_mode === 'click') {
-          get_request_api(`mouse-click/${this.state.x}/${this.state.y}`)
+          get_request_api(`mouse-click/${this.state.x}/${this.state.y}/left`)
+        } else if (this.props.mouse_mode === 'click_right') {
+          get_request_api(`mouse-click/${this.state.x}/${this.state.y}/right`)
         } else if (this.props.mouse_mode === 'move') {
           get_request_api(`mouse-move/${this.state.x}/${this.state.y}`)
         }

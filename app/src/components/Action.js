@@ -33,7 +33,6 @@ class Action extends React.Component {
       condition: 'none',
     }
     this.point_functions = ['click', 'move_to', 'drag_to']
-    this.region_text_functions = ['capture_screen_data', 'click_image_region']
     this.region_functions = [
       'capture_screen_data',
       'click_image_region',
@@ -41,6 +40,7 @@ class Action extends React.Component {
     ]
     this.position_functions = [
       'click',
+      'click_right',
       'move_to',
       'drag_to',
       'capture_screen_data',
