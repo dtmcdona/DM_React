@@ -1,3 +1,6 @@
+export const base_url = 'http://127.0.0.1:8003/'
+export const logging = true
+
 export const action_constants = {
   action_functions: [
     {
