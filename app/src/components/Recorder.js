@@ -1,5 +1,5 @@
 import { Component } from 'react'
-import Components from './components'
+import ActionContainer from './ActionContainer'
 import { connect } from 'react-redux'
 import {
   canvasDataReset,
@@ -11,12 +11,12 @@ import {
 import Canvas from './Canvas'
 import SideBar from './SideBar'
 import CanvasConsole from './CanvasConsole'
+import { base_url, logging } from './constants'
 
 var task_id = ''
 var action_list = []
 var snip_list = []
 var timestamp = Date.now()
-const base_url = 'http://127.0.0.1:8003/'
 
 function Action(
   id,
@@ -85,7 +85,7 @@ class Recorder extends Component {
     this.handleMouseMove = this.handleMouseMove.bind(this)
     this.handleClick = this.handleClick.bind(this)
     this.handleKeyPress = this.handleKeyPress.bind(this)
-    this.state = { x: 0, y: 0, logging: true, task_id: '' }
+    this.state = { x: 0, y: 0, task_id: '' }
   }
 
   getTimeDelta = () => {
@@ -280,20 +280,20 @@ class Recorder extends Component {
     this.props.controlToggle('RECORD', false)
     this.props.controlToggle('REMOTE_CONTROL', false)
     this.props.controlToggle('PLAYBACK', true)
-    if (this.state.logging) {
+    if (logging) {
       console.log('Task started')
     }
     try {
       await get_request_api(`execute-task/${task_id}`)
     } catch (err) {
-      if (this.state.logging) {
+      if (logging) {
         console.log(err)
       }
     } finally {
       this.props.controlToggle('RECORD', prev_recording)
       this.props.controlToggle('REMOTE_CONTROL', prev_remote_controlling)
       this.props.controlToggle('PLAYBACK', false)
-      if (this.state.logging) {
+      if (logging) {
         console.log('Task finished')
       }
     }
@@ -306,7 +306,7 @@ class Recorder extends Component {
       x: event.clientX / this.props.screen_x_scale - x_offset,
       y: event.clientY / this.props.screen_y_scale - y_offset,
     })
-    if (this.state.logging) {
+    if (logging) {
       console.log(`Mouse clicked (${this.state.x}, ${this.state.y})`)
     }
     if (
@@ -342,7 +342,7 @@ class Recorder extends Component {
       } else if (this.props.snipping_image) {
         if (this.props.snip_x1 === 0) {
           this.props.canvasSetCoords(2, this.state.x, this.state.y, 0, 0)
-          if (this.state.logging) {
+          if (logging) {
             console.log('Captured x1 and y1')
           }
         } else if (this.props.snip_x2 === 0) {
@@ -353,13 +353,13 @@ class Recorder extends Component {
             this.state.x,
             this.state.y
           )
-          if (this.state.logging) {
+          if (logging) {
             console.log('Captured x2 and y2')
           }
         }
       } else if (this.props.streaming && this.props.recording) {
         this.create_action(this.props.mouse_mode)
-        if (this.state.logging) {
+        if (logging) {
           console.log(`Mouse ${this.props.mouse_mode} sent to Fast API`)
         }
       }
@@ -380,7 +380,7 @@ class Recorder extends Component {
   }
 
   handleKeyPress = (event) => {
-    if (this.state.logging) {
+    if (logging) {
       console.log('Key pressed: ' + event.key)
     }
     if (this.props.snip_prompt_index === 3) {
@@ -419,7 +419,7 @@ class Recorder extends Component {
           if (event.key === '2') {
             this.props.canvasDataReset(false)
           }
-        } else if (this.state.logging) {
+        } else if (logging) {
           console.log('Error with snip image prompt')
         }
       } else if (event.key === '3') {
@@ -464,19 +464,21 @@ class Recorder extends Component {
   }
 
   handleDeleteAction = (event) => {
-    const id = event.target.name
-    if (this.state.logging) {
-      console.log('Delete action:' + id)
-    }
-    let index = 0
-    for (let i = 0; i < action_list.length; i++) {
-      if (action_list[i].id === id) {
-        index = i
-        break
+    if (action_list.length > 0) {
+      const id = event.target.name
+      if (logging) {
+        console.log('Delete action:' + id)
       }
+      let index = 0
+      for (let i = 0; i < action_list.length; i++) {
+        if (action_list[i].id === id) {
+          index = i
+          break
+        }
+      }
+      action_list.splice(index, 1)
+      get_request_api('delete-action/' + id)
     }
-    action_list.splice(index, 1)
-    get_request_api('delete-action/' + id)
   }
 
   componentDidMount() {
@@ -492,7 +494,6 @@ class Recorder extends Component {
         <div className='canvas--group'>
           <div className='canvas--view'>
             <Canvas
-              base_url={this.props.base_url}
               height={this.props.screen_height * this.props.screen_y_scale}
               width={this.props.screen_width * this.props.screen_x_scale}
               screen_fps={this.props.screen_fps}
@@ -539,7 +540,7 @@ class Recorder extends Component {
                 <th>Delete</th>
               </tr>
               {action_list.map((block) => (
-                <Components
+                <ActionContainer
                   key={`${block.id}-component`}
                   block={block}
                   event_func={this.handleDeleteAction}
@@ -578,7 +579,6 @@ const mapStateToProps = (state) => {
     snip_y2: state.canvasData.snip_y2,
     snipping_image: state.canvasData.snipping_image,
     //Settings
-    base_url: state.settings.base_url,
     random_enabled: state.settings.random_enabled,
     random_mouse_delay: state.settings.random_mouse_delay,
     random_mouse_path: state.settings.random_mouse_path,

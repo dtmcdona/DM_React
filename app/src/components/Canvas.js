@@ -1,9 +1,8 @@
 import { useRef, useEffect, useState } from 'react'
-import { default_image } from './constants'
+import { base_url } from './constants'
 import { useQuery } from '@tanstack/react-query'
 
 const Canvas = ({
-  base_url,
   height,
   width,
   screen_fps,

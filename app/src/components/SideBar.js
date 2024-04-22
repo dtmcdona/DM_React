@@ -14,6 +14,7 @@ import {
   controlToggle,
 } from '../actions'
 import React from 'react'
+import { base_url } from './constants'
 
 class SideBar extends React.Component {
   handleMouseModeClick = () => {
@@ -35,7 +36,7 @@ class SideBar extends React.Component {
 
   handleSnipImage = async () => {
     if (!this.props.snipping_image) {
-      let url = this.props.base_url + 'screenshot/'
+      let url = base_url + 'screenshot/'
       let response = await fetch(url)
       if (response.ok) {
         let json = await response.json()
@@ -119,7 +120,6 @@ const mapStateToProps = (state) => {
   return {
     mouse_mode: state.controls.mouse_mode,
     snipping_image: state.canvasData.snipping_image,
-    base_url: state.settings.base_url,
   }
 }
 

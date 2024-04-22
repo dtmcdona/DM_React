@@ -1,5 +1,5 @@
 import React from 'react'
-import { action_constants } from './constants'
+import { action_constants, base_url } from './constants'
 
 class Action extends React.Component {
   constructor(props) {
@@ -54,7 +54,6 @@ class Action extends React.Component {
   }
 
   updateAction = () => {
-    const base_url = 'http://127.0.0.1:8003/'
     if (this.state.function !== 'capture_screen_data') {
       this.setState({ image_conditions: '' })
       this.setState({ variable_conditions: '' })

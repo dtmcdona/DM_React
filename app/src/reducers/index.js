@@ -30,7 +30,6 @@ const initialCanvasData = {
 }
 
 const initialSettings = {
-  base_url: 'http://127.0.0.1:8003/',
   random_enabled: false,
   random_mouse_delay: false,
   random_mouse_path: false,
@@ -124,8 +123,6 @@ const canvasDataReducer = (canvasData = initialCanvasData, action) => {
 
 const settingsReducer = (settings = initialSettings, action) => {
   switch (action.type) {
-    case 'SET_BASE_URL':
-      return { ...settings, base_url: action.payload }
     case 'SET_RANDOM_ENABLED':
       return { ...settings, random_enabled: action.payload }
     case 'SET_RANDOM_MOUSE_PATH':
