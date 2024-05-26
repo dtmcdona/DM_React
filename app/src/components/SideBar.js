@@ -55,7 +55,7 @@ class SideBar extends React.Component {
         <h4>Actions:</h4>
         <ul>
           <li>
-            <button onClick={this.handleMouseModeClick}>
+            <button onMouseDown={this.handleMouseModeClick}>
               {<FaMousePointer size='16' />}
               <br />
               {this.props.mouse_mode === 'click'
@@ -64,7 +64,7 @@ class SideBar extends React.Component {
             </button>
           </li>
           <li>
-            <button onClick={this.handleMouseModeClickRight}>
+            <button onMouseDown={this.handleMouseModeClickRight}>
               {<FaRegArrowAltCircleRight size='16' />}
               <br />
               {this.props.mouse_mode === 'click_right'
@@ -73,7 +73,7 @@ class SideBar extends React.Component {
             </button>
           </li>
           <li>
-            <button onClick={this.handleMouseModeMove}>
+            <button onMouseDown={this.handleMouseModeMove}>
               {<FaMouse size='16' />}
               <br />
               {this.props.mouse_mode === 'move_to'
@@ -82,7 +82,7 @@ class SideBar extends React.Component {
             </button>
           </li>
           <li>
-            <button onClick={this.handleMouseModeDrag}>
+            <button onMouseDown={this.handleMouseModeDrag}>
               {<FaRoute size='16' />}
               <br />
               {this.props.mouse_mode === 'drag_to'
@@ -91,7 +91,7 @@ class SideBar extends React.Component {
             </button>
           </li>
           <li>
-            <button type='button' onClick={this.handleSnipImage}>
+            <button type='button' onMouseDown={this.handleSnipImage}>
               <FaRegFileImage size='16' />
               <br />
               Snip image
@@ -103,7 +103,7 @@ class SideBar extends React.Component {
           <li>
             <button
               name={this.props.lastActionId}
-              onClick={this.props.handleDeleteAction}
+              onMouseDown={this.props.handleDeleteAction}
             >
               {<FaUndo size='16' />}
               <br />

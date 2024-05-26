@@ -66,11 +66,7 @@ const Canvas = ({
     }
   }
 
-  return (
-    <>
-      <canvas ref={canvas} width={width} height={height} />
-    </>
-  )
+  return <canvas ref={canvas} width={width} height={height} />
 }
 
 export default Canvas

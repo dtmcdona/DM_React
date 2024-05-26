@@ -9,7 +9,11 @@ class RecordButton extends React.Component {
 
   render() {
     return (
-      <button type='button' onClick={this.handleClick} className='nav--options'>
+      <button
+        type='button'
+        onMouseDown={this.handleClick}
+        className='nav--options'
+      >
         {this.props.recording ? 'Stop Recording' : 'Start Recording'}
       </button>
     )
