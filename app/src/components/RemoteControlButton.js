@@ -9,7 +9,11 @@ class RemoteControlButton extends React.Component {
 
   render() {
     return (
-      <button type='button' onClick={this.handleClick} className='nav--options'>
+      <button
+        type='button'
+        onMouseDown={this.handleClick}
+        className='nav--options'
+      >
         {this.props.remote_controlling
           ? 'Remote Control On'
           : 'Remote Control Off'}

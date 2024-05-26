@@ -490,7 +490,7 @@ class Recorder extends Component {
 
   render() {
     return (
-      <div onMouseMove={this.handleMouseMove} onClick={this.handleClick}>
+      <div onMouseMove={this.handleMouseMove} onMouseDown={this.handleClick}>
         <div className='canvas--group'>
           <div className='canvas--view'>
             <Canvas
@@ -525,10 +525,10 @@ class Recorder extends Component {
             }
             placeholder='Enter task name'
           />
-          <button onClick={this.handleSaveTask}>Save</button>
-          <button onClick={this.handleNewTask}>New</button>
+          <button onMouseDown={this.handleSaveTask}>Save</button>
+          <button onMouseDown={this.handleNewTask}>New</button>
           {!this.props.playing_back && (
-            <button onClick={this.handlePlayTask}>Start Task</button>
+            <button onMouseDown={this.handlePlayTask}>Start Task</button>
           )}
           {this.props.playing_back && 'Task Playing'}
           <h3>Task actions</h3>

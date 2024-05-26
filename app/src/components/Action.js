@@ -330,7 +330,10 @@ class Action extends React.Component {
         </th>
 
         <th>
-          <button name={this.props.block.id} onClick={this.props.event_func}>
+          <button
+            name={this.props.block.id}
+            onMouseDown={this.props.event_func}
+          >
             Delete
           </button>
         </th>
