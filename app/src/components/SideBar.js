@@ -6,126 +6,116 @@ import {
   FaRoute,
   FaRegArrowAltCircleRight,
 } from 'react-icons/fa'
-import { connect } from 'react-redux'
-import {
-  canvasDataReset,
-  canvasDataSet,
-  canvasSetCoords,
-  controlToggle,
-} from '../actions'
 import React from 'react'
-import { base_url } from './constants'
+import { base_url, defaultHeaders } from './constants'
 
-class SideBar extends React.Component {
-  handleMouseModeClick = () => {
-    this.props.controlToggle('MOUSE_MODE', 'click')
+export default function SideBar({
+  handleDeleteAction,
+  lastActionId,
+  mouseMode,
+  setMouseMode,
+  snipFrame,
+  setSnipFrame,
+  setSnipPromptIndex,
+  setX1,
+  setY1,
+  setX2,
+  setY2,
+}) {
+  const handleMouseModeClick = () => {
+    setMouseMode('click')
   }
 
-  handleMouseModeClickRight = () => {
-    this.props.controlToggle('MOUSE_MODE', 'click_right')
+  const handleMouseModeClickRight = () => {
+    setMouseMode('click_right')
   }
 
-  handleMouseModeMove = () => {
-    this.props.controlToggle('MOUSE_MODE', 'move_to')
+  const handleMouseModeMove = () => {
+    setMouseMode('move_to')
   }
 
-  handleMouseModeDrag = () => {
-    this.props.canvasSetCoords(5, 0, 0, 0, 0)
-    this.props.controlToggle('MOUSE_MODE', 'drag_to')
+  const handleMouseModeDrag = () => {
+    setSnipPromptIndex(5)
+    setX1(0)
+    setX2(0)
+    setY1(0)
+    setY2(0)
+    setMouseMode('drag_to')
   }
 
-  handleSnipImage = async () => {
-    if (!this.props.snipping_image) {
+  const handleSnipImage = async () => {
+    if (snipFrame === '') {
       let url = base_url + 'screenshot/'
-      let response = await fetch(url)
+      let response = await fetch(url, { headers: defaultHeaders })
       if (response.ok) {
         let json = await response.json()
-        this.props.canvasDataSet('SNIP_FRAME', json.data)
+        console.log(json.data)
+        setSnipFrame(json.data)
       } else {
         alert('HTTP-Error: ' + response.status)
       }
     } else {
-      this.props.canvasDataReset()
+      setSnipPromptIndex(0)
+      setX1(0)
+      setX2(0)
+      setY1(0)
+      setY2(0)
+      setSnipFrame('')
     }
   }
 
-  render() {
-    return (
-      <>
-        <h4>Actions:</h4>
-        <ul>
-          <li>
-            <button onMouseDown={this.handleMouseModeClick}>
-              {<FaMousePointer size='16' />}
-              <br />
-              {this.props.mouse_mode === 'click'
-                ? '(Active) Click Left'
-                : 'Click Left'}
-            </button>
-          </li>
-          <li>
-            <button onMouseDown={this.handleMouseModeClickRight}>
-              {<FaRegArrowAltCircleRight size='16' />}
-              <br />
-              {this.props.mouse_mode === 'click_right'
-                ? '(Active) Click Right'
-                : 'Click Right'}
-            </button>
-          </li>
-          <li>
-            <button onMouseDown={this.handleMouseModeMove}>
-              {<FaMouse size='16' />}
-              <br />
-              {this.props.mouse_mode === 'move_to'
-                ? '(Active) Move Mouse'
-                : 'Move Mouse'}
-            </button>
-          </li>
-          <li>
-            <button onMouseDown={this.handleMouseModeDrag}>
-              {<FaRoute size='16' />}
-              <br />
-              {this.props.mouse_mode === 'drag_to'
-                ? '(Active) Drag Mouse'
-                : 'Drag Mouse'}
-            </button>
-          </li>
-          <li>
-            <button type='button' onMouseDown={this.handleSnipImage}>
-              <FaRegFileImage size='16' />
-              <br />
-              Snip image
-            </button>
-          </li>
-        </ul>
-        <h4>Options:</h4>
-        <ul>
-          <li>
-            <button
-              name={this.props.lastActionId}
-              onMouseDown={this.props.handleDeleteAction}
-            >
-              {<FaUndo size='16' />}
-              <br />
-              {'Undo Action'}
-            </button>
-          </li>
-        </ul>
-      </>
-    )
-  }
+  return (
+    <>
+      <h4>Actions:</h4>
+      <ul>
+        <li>
+          <button onMouseDown={handleMouseModeClick}>
+            {<FaMousePointer size='16' />}
+            <br />
+            {mouseMode === 'click' ? '(Active) Click Left' : 'Click Left'}
+          </button>
+        </li>
+        <li>
+          <button onMouseDown={handleMouseModeClickRight}>
+            {<FaRegArrowAltCircleRight size='16' />}
+            <br />
+            {mouseMode === 'click_right'
+              ? '(Active) Click Right'
+              : 'Click Right'}
+          </button>
+        </li>
+        <li>
+          <button onMouseDown={handleMouseModeMove}>
+            {<FaMouse size='16' />}
+            <br />
+            {mouseMode === 'move_to' ? '(Active) Move Mouse' : 'Move Mouse'}
+          </button>
+        </li>
+        <li>
+          <button onMouseDown={handleMouseModeDrag}>
+            {<FaRoute size='16' />}
+            <br />
+            {mouseMode === 'drag_to' ? '(Active) Drag Mouse' : 'Drag Mouse'}
+          </button>
+        </li>
+        <li>
+          <button type='button' onMouseDown={handleSnipImage}>
+            <FaRegFileImage size='16' />
+            <br />
+            Snip image
+          </button>
+        </li>
+      </ul>
+      <h4>Options:</h4>
+      <ul>
+        <li>
+          <button name={lastActionId} onMouseDown={handleDeleteAction}>
+            {<FaUndo size='16' />}
+            <br />
+            Undo Action
+          </button>
+        </li>
+      </ul>
+    </>
+  )
 }
-
-const mapStateToProps = (state) => {
-  return {
-    mouse_mode: state.controls.mouse_mode,
-    snipping_image: state.canvasData.snipping_image,
-  }
-}
-
-export default connect(mapStateToProps, {
-  controlToggle,
-  canvasDataReset,
-  canvasDataSet,
-  canvasSetCoords,
-})(SideBar)

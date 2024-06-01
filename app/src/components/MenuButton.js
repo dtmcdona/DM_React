@@ -1,19 +1,16 @@
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 
-function MenuButton({ key_name, value, updateSettingValue }) {
-  const updateValue = (event) => {
-    updateSettingValue(`${event.target.name.toUpperCase()}`, !value)
-  }
-
+function MenuButton({ name, value, setValue }) {
+  const updateValue = useCallback(() => setValue((prev) => !prev), [setValue])
   return useMemo(
     () => (
-      <div key={key_name}>
-        <button name={key_name} type='button' onClick={updateValue}>
+      <div key={`${name}Input`}>
+        <button name={name} type='button' onClick={updateValue}>
           {value ? 'On' : 'Off'}
         </button>
       </div>
     ),
-    [value]
+    [name, value, updateValue]
   )
 }
 

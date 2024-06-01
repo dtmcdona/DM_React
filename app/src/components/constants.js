@@ -132,6 +132,14 @@ export const snip_prompts = [
   'Click the ending location the mouse drag',
 ]
 
-export const default_image = {
-  data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAKnRFWHRDcmVhdGlvbiBUaW1lAFNhIDQgTWFpIDIwMDIgMjM6MjA6MzYgKzAxMDBC3wLLAAAAB3RJTUUH0gUEFRUrVURxbAAAAAlwSFlzAAAK8AAACvABQqw0mAAAAARnQU1BAACxjwv8YQUAAAAMSURBVHjaY+CQbQEAANoAqj1ML8MAAAAASUVORK5CYII=',
+export const defaultHeaders = {
+  'Content-Type': 'application/json',
+  'Access-Control-Allow-Origin': '*',
+  Accepts: 'application/json',
 }
+
+export const screenFPS = 60
+export const screenWidth = 1920
+export const screenHeight = 1080
+export const screenXScale = 0.5
+export const screenYScale = 0.5

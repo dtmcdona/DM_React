@@ -1,20 +1,16 @@
-import { useRef, useEffect, useState } from 'react'
-import { base_url } from './constants'
+import { useRef, useEffect } from 'react'
+import {
+  base_url,
+  defaultHeaders,
+  screenFPS,
+  screenHeight,
+  screenWidth,
+  screenXScale,
+  screenYScale,
+} from './constants'
 import { useQuery } from '@tanstack/react-query'
 
-const Canvas = ({
-  height,
-  width,
-  screen_fps,
-  screen_x_scale,
-  screen_y_scale,
-  snip_frame,
-  snip_x1,
-  snip_x2,
-  snip_y1,
-  snip_y2,
-  streaming,
-}) => {
+const Canvas = ({ snipFrame, streaming, x1, x2, y1, y2 }) => {
   const canvas = useRef()
   const { data: screenshot } = useQuery({
     queryKey: ['screenshot'],
@@ -23,15 +19,13 @@ const Canvas = ({
         method: 'GET',
         cors: 'no-cors',
         cache: 'no-cache',
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          Accepts: 'application/json',
-        },
+        headers: defaultHeaders,
       }).then((res) => res.json()),
-    refetchInterval: 1000 / screen_fps,
+    refetchInterval: 1000 / screenFPS,
     enabled: streaming,
   })
+  const width = screenWidth * screenXScale
+  const height = screenHeight * screenYScale
 
   useEffect(() => {
     const context = canvas.current.getContext('2d')
@@ -40,17 +34,17 @@ const Canvas = ({
 
   const draw = (context) => {
     let img = new Image(width, height)
-    if (typeof snip_frame == 'string' && snip_frame !== '') {
-      if (snip_x1 !== 0 && snip_y1 !== 0) {
-        context.clearRect(0, 0, width, screen_y_scale * snip_y1)
-        context.clearRect(0, 0, screen_x_scale * snip_x1, height)
+    if (typeof snipFrame == 'string' && snipFrame !== '') {
+      if (x1 !== 0 && y1 !== 0) {
+        context.clearRect(0, 0, width, screenYScale * y1)
+        context.clearRect(0, 0, screenXScale * x1, height)
       }
-      if (snip_x2 !== 0 && snip_y2 !== 0) {
-        context.clearRect(0, screen_y_scale * snip_y2, width, height)
-        context.clearRect(screen_x_scale * snip_x2, 0, width, height)
+      if (x2 !== 0 && y2 !== 0) {
+        context.clearRect(0, screenYScale * y2, width, height)
+        context.clearRect(screenXScale * x2, 0, width, height)
       }
       context.drawImage(img, 0, 0, width, height)
-      img.src = `data:image/png;base64,${snip_frame}`
+      img.src = `data:image/png;base64,${snipFrame}`
     } else if (streaming && screenshot?.data) {
       img.onload = function () {
         context.drawImage(img, 0, 0, img.width, img.height)
