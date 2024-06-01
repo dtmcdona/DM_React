@@ -9,11 +9,12 @@ import {
   screenXScale,
   screenYScale,
 } from './constants'
-import { getLocalValue, getTimeDelta } from 'helpers'
+import { getTimeDelta } from 'helpers'
 import React, { useEffect, useState } from 'react'
 import { useControlsContext } from '../contexts/controls'
 import Action from './Action'
 import { useSettingsContext } from '../contexts/settings'
+import { useCanvasData } from '../hooks/useCanvasData'
 
 const get_request_api = (path) => {
   let url = `${base_url}${path}`
@@ -31,18 +32,9 @@ export default function Recorder() {
   const [x, setX] = useState(0)
   const [y, setY] = useState(0)
   const [taskId, setTaskId] = useState('')
-  const [x1, setX1] = useState(0)
-  const [x2, setX2] = useState(0)
-  const [y1, setY1] = useState(0)
-  const [y2, setY2] = useState(0)
-  const [keyPressed, setKeyPressed] = useState('')
-  const [mouseMode, setMouseMode] = useState('click')
   const [playingTask, setPlayingTask] = useState(false)
-  const [snipPromptIndex, setSnipPromptIndex] = useState(0)
-  const [snipFrame, setSnipFrame] = useState('')
   const [actionList, setActionList] = useState([])
   const [actionTimestamp, setActionTimestamp] = useState(Date.now())
-  const [snipId, setSnipId] = useState(0)
   const {
     streaming,
     recording,
@@ -58,8 +50,33 @@ export default function Recorder() {
     randomMouseMaxDelay,
     randomMouseRange,
   } = useSettingsContext()
+  const {
+    mouseMode,
+    snipFrame,
+    snipId,
+    snipPromptIndex,
+    x1,
+    y1,
+    x2,
+    y2,
+    resetCanvasData,
+    setMouseMode,
+    setSnipFrame,
+    setSnipId,
+    setSnipTopLeft,
+    setSnipBottomRight,
+    setSnipPromptIndex,
+    setStartMouseDrag,
+    setDragStart,
+    setDragEnd,
+  } = useCanvasData()
 
-  const create_action = (action_type) => {
+  const create_action = (
+    action_type,
+    canvasX = null,
+    canvasY = null,
+    keyPressed = null
+  ) => {
     const deltaTime = getTimeDelta(actionTimestamp)
     setActionTimestamp(Date.now())
     let function_params = ''
@@ -68,9 +85,11 @@ export default function Recorder() {
       action_type === 'click_right' ||
       action_type === 'move_to'
     ) {
-      function_params = `, "x1": ${x}, "y1": ${y}`
+      function_params = `, "x1": ${canvasX}, "y1": ${canvasY}`
     } else if (action_type === 'drag_to') {
-      function_params = `, "x1": ${x1}, "y1": ${y1}, "x2": ${x2}, "y2": ${y2}`
+      function_params = `, "x1": ${x1}, "y1": ${y1}, "x2": ${
+        canvasX || x2
+      }, "y2": ${canvasY || y2}`
     } else if (
       action_type === 'click_image' ||
       action_type === 'move_to_image'
@@ -109,7 +128,10 @@ export default function Recorder() {
 
     xhr.onreadystatechange = function () {
       if (xhr.readyState === 4) {
-        setActionList([...actionList, JSON.parse(xhr.responseText)])
+        const newAction = JSON.parse(xhr.responseText)
+        if (newAction?.data !== 'No screen objects found') {
+          setActionList([...actionList, newAction])
+        }
       }
     }
 
@@ -128,7 +150,8 @@ export default function Recorder() {
 
     xhr.onreadystatechange = function () {
       if (xhr.readyState === 4) {
-        setActionList([...actionList, JSON.parse(xhr.responseText)])
+        const newAction = JSON.parse(xhr.responseText)
+        setActionList([...actionList, newAction])
       }
     }
 
@@ -209,80 +232,66 @@ export default function Recorder() {
   const handleClick = (event) => {
     let x_offset = 10 / screenXScale
     let y_offset = 70 / screenYScale
-    setX(event.clientX / screenXScale - x_offset)
-    setY(event.clientY / screenYScale - y_offset)
+    const canvasX = event.clientX / screenXScale - x_offset
+    const canvasY = event.clientY / screenYScale - y_offset
     if (logging) {
       console.log(`Mouse clicked (${x}, ${y})`)
     }
-    if (x >= 0 && x <= screenWidth && y >= 0 && y <= screenHeight) {
+    if (
+      canvasX >= 0 &&
+      canvasX <= screenWidth &&
+      canvasY >= 0 &&
+      canvasY <= screenHeight
+    ) {
       if (mouseMode === 'drag_to') {
         if (x1 === 0) {
-          setSnipPromptIndex(6)
-          setX1(x)
-          setY1(y)
-          setX2(0)
-          setY2(0)
+          setDragStart(canvasX, canvasY)
         } else if (x2 === 0) {
-          setSnipPromptIndex(0)
-          setX2(x)
-          setY2(y)
+          setDragEnd(canvasX, canvasY)
           if (recording) {
-            //Create drag_to action
-            create_action('drag_to')
+            create_action('drag_to', canvasX, canvasY)
           } else {
-            get_request_api(`mouse-drag/${x1}/${y1}` + `/${x}/${y}`)
+            get_request_api(`mouse-drag/${x1}/${y1}/${canvasX}/${canvasY}`)
           }
-          setX1(0)
-          setY1(0)
-          setX2(0)
-          setY2(0)
-          setMouseMode('click')
+          resetCanvasData()
         }
       } else if (snipFrame !== '') {
         if (x1 === 0) {
-          setSnipPromptIndex(2)
-          setX1(x)
-          setY1(y)
-          setX2(0)
-          setY2(0)
+          setSnipTopLeft(canvasX, canvasY)
           if (logging) {
             console.log('Captured x1 and y1')
           }
         } else if (x2 === 0) {
-          setSnipPromptIndex(3)
-          setX2(x)
-          setY2(y)
+          setSnipBottomRight(canvasX, canvasY)
           if (logging) {
             console.log('Captured x2 and y2')
           }
         }
       } else if (streaming && recording) {
-        create_action(mouseMode)
+        create_action(mouseMode, canvasX, canvasY)
         if (logging) {
           console.log(`Mouse ${mouseMode} sent to Fast API`)
         }
       }
       if (!recording && streaming && remoteControlling) {
         if (mouseMode === 'click') {
-          get_request_api(`mouse-click/${x}/${y}/left`)
+          get_request_api(`mouse-click/${canvasX}/${canvasY}/left`)
         } else if (mouseMode === 'click_right') {
-          get_request_api(`mouse-click/${x}/${y}/right`)
+          get_request_api(`mouse-click/${canvasX}/${canvasY}/right`)
         } else if (mouseMode === 'move') {
-          get_request_api(`mouse-move/${x}/${y}`)
+          get_request_api(`mouse-move/${canvasX}/${canvasY}`)
         }
       }
     }
   }
 
   const handleKeyPress = (event) => {
+    const key = String(event.key)
     if (logging) {
       console.log('Key pressed: ' + event.key)
     }
     if (snipPromptIndex === 3) {
-      if (event.key === '1') {
-        setSnipPromptIndex(4)
-      }
-      if (event.key === '1' || event.key === '2') {
+      if (key === '1' || key === '2') {
         //Save image and save snipId
         if (x1 !== 0 && y1 !== 0 && x2 !== 0 && y2 !== 0) {
           let data = '{"base64str": "' + snipFrame + '"}'
@@ -299,69 +308,35 @@ export default function Recorder() {
             if (xhr.readyState === 4) {
               let jsonData = JSON.parse(xhr.responseText)
               setSnipId(`${jsonData.id}.png`)
+              if (key === '2') {
+                resetCanvasData()
+              }
             }
           }
 
           xhr.send(data)
-          if (event.key === '2') {
-            setSnipPromptIndex(0)
-            setX1(0)
-            setY1(0)
-            setX2(0)
-            setY2(0)
-            setSnipFrame('')
-          }
-        } else if (logging) {
-          console.log('Error with snip image prompt')
         }
-      } else if (event.key === '3') {
-        //Restart
-        setSnipPromptIndex(0)
-        setX1(0)
-        setY1(0)
-        setX2(0)
-        setY2(0)
-        setSnipFrame('')
+      } else if (key === '3') {
+        resetCanvasData()
       }
     } else if (snipPromptIndex === 4) {
-      if (event.key === '1') {
-        //Create click_image action
+      console.log('Created Action')
+      if (key === '1') {
         create_action('click_image')
-        //Clear data
-        setSnipPromptIndex(0)
-        setX1(0)
-        setY1(0)
-        setX2(0)
-        setY2(0)
-        setSnipFrame('')
-      } else if (event.key === '2') {
-        //Create move_to_image action
+        resetCanvasData()
+      } else if (key === '2') {
         create_action('move_to_image')
-        //Clear data
-        setSnipPromptIndex(0)
-        setX1(0)
-        setY1(0)
-        setX2(0)
-        setY2(0)
-        setSnipFrame('')
-      } else if (event.key === '3') {
-        //Create move_to_image action
-        capture_screen_data('store_value')
-        //Clear data
-        setSnipPromptIndex(0)
-        setX1(0)
-        setY1(0)
-        setX2(0)
-        setY2(0)
-        setSnipFrame('')
+        resetCanvasData()
+      } else if (key === '3') {
+        capture_screen_data()
+        resetCanvasData()
       }
     } else if (x >= 0 && x <= screenWidth && y >= 0 && y <= screenHeight) {
       if (streaming && recording) {
-        setKeyPressed(String(event.key))
-        create_action('key_pressed')
+        create_action('key_pressed', null, null, key)
       }
       if (!recording && streaming && remoteControlling) {
-        get_request_api('keypress/' + event.key)
+        get_request_api(`keypress/${key}`)
       }
     }
   }
@@ -407,11 +382,9 @@ export default function Recorder() {
             setMouseMode={setMouseMode}
             snipFrame={snipFrame}
             setSnipFrame={setSnipFrame}
-            setSnipImagePromptIndex={setSnipPromptIndex}
-            setX1={setX1}
-            setY1={setY1}
-            setX2={setX2}
-            setY2={setY2}
+            setSnipPromptIndex={setSnipPromptIndex}
+            setStartMouseDrag={setStartMouseDrag}
+            resetCanvasData={resetCanvasData}
           />
         </div>
       </div>

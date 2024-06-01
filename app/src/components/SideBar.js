@@ -16,11 +16,8 @@ export default function SideBar({
   setMouseMode,
   snipFrame,
   setSnipFrame,
-  setSnipPromptIndex,
-  setX1,
-  setY1,
-  setX2,
-  setY2,
+  setStartMouseDrag,
+  resetCanvasData,
 }) {
   const handleMouseModeClick = () => {
     setMouseMode('click')
@@ -35,12 +32,7 @@ export default function SideBar({
   }
 
   const handleMouseModeDrag = () => {
-    setSnipPromptIndex(5)
-    setX1(0)
-    setX2(0)
-    setY1(0)
-    setY2(0)
-    setMouseMode('drag_to')
+    setStartMouseDrag()
   }
 
   const handleSnipImage = async () => {
@@ -55,12 +47,7 @@ export default function SideBar({
         alert('HTTP-Error: ' + response.status)
       }
     } else {
-      setSnipPromptIndex(0)
-      setX1(0)
-      setX2(0)
-      setY1(0)
-      setY2(0)
-      setSnipFrame('')
+      resetCanvasData()
     }
   }
 

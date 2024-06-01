@@ -22,7 +22,7 @@ const Canvas = ({ snipFrame, streaming, x1, x2, y1, y2 }) => {
         headers: defaultHeaders,
       }).then((res) => res.json()),
     refetchInterval: 1000 / screenFPS,
-    enabled: streaming,
+    enabled: streaming && snipFrame === '',
   })
   const width = screenWidth * screenXScale
   const height = screenHeight * screenYScale
