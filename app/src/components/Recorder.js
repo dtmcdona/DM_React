@@ -286,6 +286,7 @@ export default function Recorder() {
   }
 
   const handleKeyPress = (event) => {
+    event.preventDefault()
     const key = String(event.key)
     if (logging) {
       console.log('Key pressed: ' + event.key)
@@ -361,31 +362,33 @@ export default function Recorder() {
   })
 
   return (
-    <div onMouseMove={handleMouseMove} onMouseDown={handleClick}>
-      <div className='canvas--group'>
-        <div className='canvas--view'>
-          <Canvas
-            snipFrame={snipFrame}
-            streaming={streaming}
-            x1={x1}
-            y1={y1}
-            x2={x2}
-            y2={y2}
-          />
-          <CanvasConsole snipPromptIndex={snipPromptIndex} />
-        </div>
-        <div className='canvas--toolbox'>
-          <SideBar
-            handleDeleteAction={handleDeleteAction}
-            lastActionId={actionList.at(-1)?.id}
-            mouseMode={mouseMode}
-            setMouseMode={setMouseMode}
-            snipFrame={snipFrame}
-            setSnipFrame={setSnipFrame}
-            setSnipPromptIndex={setSnipPromptIndex}
-            setStartMouseDrag={setStartMouseDrag}
-            resetCanvasData={resetCanvasData}
-          />
+    <>
+      <div onMouseMove={handleMouseMove} onMouseDown={handleClick}>
+        <div className='canvas--group'>
+          <div className='canvas--view'>
+            <Canvas
+              snipFrame={snipFrame}
+              streaming={streaming}
+              x1={x1}
+              y1={y1}
+              x2={x2}
+              y2={y2}
+            />
+            <CanvasConsole snipPromptIndex={snipPromptIndex} />
+          </div>
+          <div className='canvas--toolbox'>
+            <SideBar
+              handleDeleteAction={handleDeleteAction}
+              lastActionId={actionList.at(-1)?.id}
+              mouseMode={mouseMode}
+              setMouseMode={setMouseMode}
+              snipFrame={snipFrame}
+              setSnipFrame={setSnipFrame}
+              setSnipPromptIndex={setSnipPromptIndex}
+              setStartMouseDrag={setStartMouseDrag}
+              resetCanvasData={resetCanvasData}
+            />
+          </div>
         </div>
       </div>
       <div className='actions--section'>
@@ -412,12 +415,12 @@ export default function Recorder() {
               <Action
                 key={action.id}
                 block={action}
-                event_func={handleDeleteAction}
+                deleteAction={handleDeleteAction}
               />
             ))}
           </tbody>
         </table>
       </div>
-    </div>
+    </>
   )
 }

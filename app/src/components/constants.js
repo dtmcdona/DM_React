@@ -143,3 +143,23 @@ export const screenWidth = 1920
 export const screenHeight = 1080
 export const screenXScale = 0.5
 export const screenYScale = 0.5
+
+export const point_functions = ['click', 'move_to', 'drag_to']
+export const region_functions = [
+  'capture_screen_data',
+  'click_image_region',
+  'drag_to',
+]
+export const position_functions = [
+  'click',
+  'click_right',
+  'move_to',
+  'drag_to',
+  'capture_screen_data',
+  'click_image_region',
+]
+export const image_functions = [
+  'click_image',
+  'move_to_image',
+  'click_image_region',
+]
