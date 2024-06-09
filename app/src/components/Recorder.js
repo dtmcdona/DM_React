@@ -1,71 +1,20 @@
-import { Component } from 'react'
-import ActionContainer from './ActionContainer'
-import { connect } from 'react-redux'
-import {
-  canvasDataReset,
-  canvasDataSet,
-  canvasSetCoords,
-  controlToggle,
-  settingsValueSet,
-} from '../actions'
 import Canvas from './Canvas'
 import SideBar from './SideBar'
 import CanvasConsole from './CanvasConsole'
-import { base_url, logging } from './constants'
-
-var task_id = ''
-var action_list = []
-var snip_list = []
-var timestamp = Date.now()
-
-function Action(
-  id,
-  func,
-  x1,
-  x2,
-  y1,
-  y2,
-  images,
-  image_conditions,
-  variables,
-  variable_conditions,
-  comparison_values,
-  time_delay,
-  sleep_duration,
-  key_pressed,
-  true_case,
-  false_case,
-  error_case,
-  num_repeats,
-  random_path,
-  random_range,
-  random_delay
-) {
-  return {
-    id: id,
-    function: func,
-    x1: x1,
-    y1: y1,
-    x2: x2,
-    y2: y2,
-    images: images,
-    image_conditions: image_conditions,
-    variables: variables,
-    variable_conditions: variable_conditions,
-    comparison_values: comparison_values,
-    time_delay: time_delay,
-    sleep_duration: sleep_duration,
-    key_pressed: key_pressed,
-    true_case: true_case,
-    false_case: false_case,
-    error_case: error_case,
-    num_repeats: num_repeats,
-    random_path: random_path,
-    random_range: random_range,
-    random_delay: random_delay,
-    component: 'action',
-  }
-}
+import {
+  base_url,
+  logging,
+  screenHeight,
+  screenWidth,
+  screenXScale,
+  screenYScale,
+} from './constants'
+import { getTimeDelta } from 'helpers'
+import React, { useEffect, useState } from 'react'
+import { useControlsContext } from '../contexts/controls'
+import Action from './Action'
+import { useSettingsContext } from '../contexts/settings'
+import { useCanvasData } from '../hooks/useCanvasData'
 
 const get_request_api = (path) => {
   let url = `${base_url}${path}`
@@ -79,59 +28,94 @@ const get_request_api = (path) => {
   xhr.send()
 }
 
-class Recorder extends Component {
-  constructor(props) {
-    super(props)
-    this.handleMouseMove = this.handleMouseMove.bind(this)
-    this.handleClick = this.handleClick.bind(this)
-    this.handleKeyPress = this.handleKeyPress.bind(this)
-    this.state = { x: 0, y: 0, task_id: '' }
-  }
+export default function Recorder() {
+  const [x, setX] = useState(0)
+  const [y, setY] = useState(0)
+  const [taskId, setTaskId] = useState('')
+  const [playingTask, setPlayingTask] = useState(false)
+  const [actionList, setActionList] = useState([])
+  const [actionTimestamp, setActionTimestamp] = useState(Date.now())
+  const {
+    streaming,
+    recording,
+    setRecording,
+    remoteControlling,
+    setRemoteControlling,
+  } = useControlsContext()
+  const {
+    randomEnabled,
+    randomMouseDelay,
+    randomMousePath,
+    randomMousePosition,
+    randomMouseMaxDelay,
+    randomMouseRange,
+  } = useSettingsContext()
+  const {
+    mouseMode,
+    snipFrame,
+    snipId,
+    snipPromptIndex,
+    x1,
+    y1,
+    x2,
+    y2,
+    resetCanvasData,
+    setMouseMode,
+    setSnipFrame,
+    setSnipId,
+    setSnipTopLeft,
+    setSnipBottomRight,
+    setSnipPromptIndex,
+    setStartMouseDrag,
+    setDragStart,
+    setDragEnd,
+  } = useCanvasData()
 
-  getTimeDelta = () => {
-    let now = Date.now()
-    let deltaTime = (now - timestamp) / 1000
-    timestamp = now
-    this.props.canvasDataSet('DELTA_TIME', deltaTime)
-  }
-
-  create_action = (action_type) => {
-    this.getTimeDelta()
+  const create_action = (
+    action_type,
+    canvasX = null,
+    canvasY = null,
+    keyPressed = null
+  ) => {
+    const deltaTime = getTimeDelta(actionTimestamp)
+    setActionTimestamp(Date.now())
     let function_params = ''
     if (
       action_type === 'click' ||
       action_type === 'click_right' ||
       action_type === 'move_to'
     ) {
-      function_params = `, "x1": ${this.state.x}, "y1": ${this.state.y}`
+      function_params = `, "x1": ${canvasX}, "y1": ${canvasY}`
     } else if (action_type === 'drag_to') {
-      function_params = `, "x1": ${this.props.snip_x1}, "y1": ${this.props.snip_y1}, "x2": ${this.props.snip_x2}, "y2": ${this.props.snip_y2}`
+      function_params = `, "x1": ${x1}, "y1": ${y1}, "x2": ${
+        canvasX || x2
+      }, "y2": ${canvasY || y2}`
     } else if (
       action_type === 'click_image' ||
       action_type === 'move_to_image'
     ) {
-      function_params = `, "images": ["${snip_list[snip_list.length - 1]}"]`
+      function_params = `, "images": ["${snipId}"]`
     } else if (action_type === 'key_pressed') {
-      function_params = `, "key_pressed": "${this.props.key_pressed}"`
+      function_params = `, "key_pressed": "${keyPressed}"`
     }
-    if (this.props.random_enabled) {
-      if (this.props.random_mouse_path) {
+    if (randomEnabled) {
+      if (randomMousePath) {
         let temp = function_params
         function_params = `${temp}, "random_path": true`
       }
-      if (this.props.random_mouse_position) {
+      if (randomMousePosition) {
         let temp = function_params
-        function_params = `${temp}, "random_range": ${this.props.random_mouse_range}`
+        function_params = `${temp}, "random_range": ${randomMouseRange}`
       }
-      if (this.props.random_mouse_delay) {
+      if (randomMouseDelay) {
         let temp = function_params
-        function_params = `${temp}, "random_delay": ${this.props.random_mouse_max_delay}`
+        function_params = `${temp}, "random_delay": ${randomMouseMaxDelay}`
       }
     }
 
-    let data = `{"function": "${action_type}"${function_params}, "time_delay": ${this.props.delta_time}}`
+    let data = `{"function": "${action_type}"${function_params}, "time_delay": ${deltaTime}}`
 
-    const url = this.props.remote_controlling
+    const url = remoteControlling
       ? `${base_url}add-execute-action/`
       : `${base_url}add-action/`
 
@@ -144,43 +128,18 @@ class Recorder extends Component {
 
     xhr.onreadystatechange = function () {
       if (xhr.readyState === 4) {
-        let json_data = JSON.parse(xhr.responseText)
-        console.log(json_data)
-        action_list.push(
-          new Action(
-            json_data.id,
-            json_data.function,
-            json_data.x1,
-            json_data.x2,
-            json_data.y1,
-            json_data.y2,
-            json_data.images,
-            json_data.image_conditions,
-            json_data.variables,
-            json_data.variable_conditions,
-            json_data.comparison_values,
-            json_data.time_delay,
-            json_data.sleep_duration,
-            json_data.key_pressed,
-            json_data.true_case,
-            json_data.false_case,
-            json_data.error_case,
-            json_data.num_repeats,
-            json_data.random_path,
-            json_data.random_range,
-            json_data.random_delay
-          )
-        )
+        const newAction = JSON.parse(xhr.responseText)
+        if (newAction?.data !== 'No screen objects found') {
+          setActionList([...actionList, newAction])
+        }
       }
     }
 
     xhr.send(data)
   }
 
-  capture_screen_data = () => {
-    let url =
-      `${base_url}capture-screen-data/${this.props.snip_x1}/${this.props.snip_y1}` +
-      `/${this.props.snip_x2}/${this.props.snip_y2}/-1`
+  const capture_screen_data = () => {
+    let url = `${base_url}capture-screen-data/${x1}/${y1}/${x2}/${y2}/-1`
 
     let xhr = new XMLHttpRequest()
     xhr.open('GET', url)
@@ -191,64 +150,38 @@ class Recorder extends Component {
 
     xhr.onreadystatechange = function () {
       if (xhr.readyState === 4) {
-        let json_data = JSON.parse(xhr.responseText)
-        action_list.push(
-          new Action(
-            json_data.id,
-            json_data.function,
-            json_data.x1,
-            json_data.x2,
-            json_data.y1,
-            json_data.y2,
-            json_data.images,
-            json_data.image_conditions,
-            json_data.variables,
-            json_data.variable_conditions,
-            json_data.comparison_values,
-            json_data.time_delay,
-            json_data.sleep_duration,
-            json_data.key_pressed,
-            json_data.true_case,
-            json_data.false_case,
-            json_data.error_case,
-            json_data.num_repeats,
-            json_data.random_path,
-            json_data.random_range,
-            json_data.random_delay
-          )
-        )
+        const newAction = JSON.parse(xhr.responseText)
+        setActionList([...actionList, newAction])
       }
     }
 
     xhr.send()
   }
 
-  handleMouseMove = (event) => {
-    let x_offset = 10 / this.props.screen_x_scale
-    let y_offset = 70 / this.props.screen_y_scale
-    this.setState({
-      x: event.clientX / this.props.screen_x_scale - x_offset,
-      y: event.clientY / this.props.screen_y_scale - y_offset,
-    })
+  const handleMouseMove = (event) => {
+    let x_offset = 10 / screenXScale
+    let y_offset = 70 / screenYScale
+    setX(event.clientX / screenXScale - x_offset)
+    setY(event.clientY / screenYScale - y_offset)
   }
 
-  handleSaveTask = () => {
+  const handleSaveTask = () => {
     let url = ''
-    if (task_id === '') {
+    if (taskId === '') {
       url = `${base_url}add-task`
     } else {
-      url = `${base_url}update-task/${task_id}`
+      url = `${base_url}update-task/${taskId}`
     }
-    let action_id_list = ''
-    for (let i = 0; i < action_list.length; i++) {
+    let actionIds = ''
+    for (let i = 0; i < actionList.length; i++) {
       if (i === 0) {
-        action_id_list = action_id_list + `"${action_list[i].id}"`
+        actionIds = actionIds + `"${actionList[i].id}"`
       } else {
-        action_id_list = action_id_list + `, "${action_list[i].id}"`
+        actionIds = actionIds + `, "${actionList[i].id}"`
       }
     }
 
-    let data = `{"id": "${this.state.task_id}", "action_id_list": [${action_id_list}]}`
+    let data = `{"id": "${taskId}", "action_id_list": [${actionIds}]}`
 
     let xhr = new XMLHttpRequest()
     xhr.open('POST', url)
@@ -259,146 +192,111 @@ class Recorder extends Component {
 
     xhr.onreadystatechange = function () {
       if (xhr.readyState === 4) {
-        let json_data = JSON.parse(xhr.responseText)
-        task_id = json_data.id
+        let jsonData = JSON.parse(xhr.responseText)
+        setTaskId(jsonData.id)
       }
     }
 
     xhr.send(data)
   }
 
-  handleNewTask = async () => {
-    this.setState({
-      task_id: '',
-    })
-    task_id = ''
+  const handleNewTask = async () => {
+    setTaskId('')
   }
 
-  handlePlayTask = async () => {
-    let prev_recording = this.props.recording
-    let prev_remote_controlling = this.props.remote_controlling
-    this.props.controlToggle('RECORD', false)
-    this.props.controlToggle('REMOTE_CONTROL', false)
-    this.props.controlToggle('PLAYBACK', true)
+  const handlePlayTask = async () => {
+    let prevRecording = recording
+    let prevRemoteControlling = remoteControlling
+    setRecording(false)
+    setRemoteControlling(false)
+    setPlayingTask(true)
     if (logging) {
       console.log('Task started')
     }
     try {
-      await get_request_api(`execute-task/${task_id}`)
+      await get_request_api(`execute-task/${taskId}`)
     } catch (err) {
       if (logging) {
         console.log(err)
       }
     } finally {
-      this.props.controlToggle('RECORD', prev_recording)
-      this.props.controlToggle('REMOTE_CONTROL', prev_remote_controlling)
-      this.props.controlToggle('PLAYBACK', false)
+      setRecording(prevRecording)
+      setRemoteControlling(prevRemoteControlling)
+      setPlayingTask(false)
       if (logging) {
         console.log('Task finished')
       }
     }
   }
 
-  handleClick = (event) => {
-    let x_offset = 10 / this.props.screen_x_scale
-    let y_offset = 70 / this.props.screen_y_scale
-    this.setState({
-      x: event.clientX / this.props.screen_x_scale - x_offset,
-      y: event.clientY / this.props.screen_y_scale - y_offset,
-    })
+  const handleClick = (event) => {
+    let x_offset = 10 / screenXScale
+    let y_offset = 70 / screenYScale
+    const canvasX = event.clientX / screenXScale - x_offset
+    const canvasY = event.clientY / screenYScale - y_offset
     if (logging) {
-      console.log(`Mouse clicked (${this.state.x}, ${this.state.y})`)
+      console.log(`Mouse clicked (${x}, ${y})`)
     }
     if (
-      this.state.x >= 0 &&
-      this.state.x <= this.props.screen_width &&
-      this.state.y >= 0 &&
-      this.state.y <= this.props.screen_height
+      canvasX >= 0 &&
+      canvasX <= screenWidth &&
+      canvasY >= 0 &&
+      canvasY <= screenHeight
     ) {
-      if (this.props.mouse_mode === 'drag_to') {
-        if (this.props.snip_x1 === 0) {
-          this.props.canvasSetCoords(6, this.state.x, this.state.y, 0, 0)
-        } else if (this.props.snip_x2 === 0) {
-          this.props.canvasSetCoords(
-            0,
-            this.props.snip_x1,
-            this.props.snip_y1,
-            this.state.x,
-            this.state.y
-          )
-          if (this.props.recording) {
-            //Create drag_to action
-            this.create_action('drag_to')
+      if (mouseMode === 'drag_to') {
+        if (x1 === 0) {
+          setDragStart(canvasX, canvasY)
+        } else if (x2 === 0) {
+          setDragEnd(canvasX, canvasY)
+          if (recording) {
+            create_action('drag_to', canvasX, canvasY)
           } else {
-            get_request_api(
-              `mouse-drag/${this.props.snip_x1}/${this.props.snip_y1}` +
-                `/${this.state.x}/${this.state.y}`
-            )
+            get_request_api(`mouse-drag/${x1}/${y1}/${canvasX}/${canvasY}`)
           }
-          //Clear data
-          this.props.canvasDataReset(false)
-          this.props.controlToggle('MOUSE_MODE', 'click')
+          resetCanvasData()
         }
-      } else if (this.props.snipping_image) {
-        if (this.props.snip_x1 === 0) {
-          this.props.canvasSetCoords(2, this.state.x, this.state.y, 0, 0)
+      } else if (snipFrame !== '') {
+        if (x1 === 0) {
+          setSnipTopLeft(canvasX, canvasY)
           if (logging) {
             console.log('Captured x1 and y1')
           }
-        } else if (this.props.snip_x2 === 0) {
-          this.props.canvasSetCoords(
-            3,
-            this.props.snip_x1,
-            this.props.snip_y1,
-            this.state.x,
-            this.state.y
-          )
+        } else if (x2 === 0) {
+          setSnipBottomRight(canvasX, canvasY)
           if (logging) {
             console.log('Captured x2 and y2')
           }
         }
-      } else if (this.props.streaming && this.props.recording) {
-        this.create_action(this.props.mouse_mode)
+      } else if (streaming && recording) {
+        create_action(mouseMode, canvasX, canvasY)
         if (logging) {
-          console.log(`Mouse ${this.props.mouse_mode} sent to Fast API`)
+          console.log(`Mouse ${mouseMode} sent to Fast API`)
         }
       }
-      if (
-        !this.props.recording &&
-        this.props.streaming &&
-        this.props.remote_controlling
-      ) {
-        if (this.props.mouse_mode === 'click') {
-          get_request_api(`mouse-click/${this.state.x}/${this.state.y}/left`)
-        } else if (this.props.mouse_mode === 'click_right') {
-          get_request_api(`mouse-click/${this.state.x}/${this.state.y}/right`)
-        } else if (this.props.mouse_mode === 'move') {
-          get_request_api(`mouse-move/${this.state.x}/${this.state.y}`)
+      if (!recording && streaming && remoteControlling) {
+        if (mouseMode === 'click') {
+          get_request_api(`mouse-click/${canvasX}/${canvasY}/left`)
+        } else if (mouseMode === 'click_right') {
+          get_request_api(`mouse-click/${canvasX}/${canvasY}/right`)
+        } else if (mouseMode === 'move') {
+          get_request_api(`mouse-move/${canvasX}/${canvasY}`)
         }
       }
     }
   }
 
-  handleKeyPress = (event) => {
+  const handleKeyPress = (event) => {
+    event.preventDefault()
+    const key = String(event.key)
     if (logging) {
       console.log('Key pressed: ' + event.key)
     }
-    if (this.props.snip_prompt_index === 3) {
-      if (event.key === '1') {
-        this.props.canvasDataSet('SNIP_PROMPT_INDEX', 4)
-      }
-      if (event.key === '1' || event.key === '2') {
-        //Save image and push file name to snip_list
-        if (
-          this.props.snip_x1 !== 0 &&
-          this.props.snip_x2 !== 0 &&
-          this.props.snip_y1 !== 0 &&
-          this.props.snip_y2 !== 0
-        ) {
-          let data = '{"base64str": "' + this.props.snip_frame + '"}'
-          let url =
-            `${base_url}screen-snip/${this.props.snip_x1}/${this.props.snip_y1}/` +
-            `${this.props.snip_x2}/${this.props.snip_y2}/`
+    if (snipPromptIndex === 3) {
+      if (key === '1' || key === '2') {
+        //Save image and save snipId
+        if (x1 !== 0 && y1 !== 0 && x2 !== 0 && y2 !== 0) {
+          let data = '{"base64str": "' + snipFrame + '"}'
+          let url = `${base_url}screen-snip/${x1}/${y1}/${x2}/${y2}/`
 
           let xhr = new XMLHttpRequest()
           xhr.open('POST', url)
@@ -409,189 +307,120 @@ class Recorder extends Component {
 
           xhr.onreadystatechange = function () {
             if (xhr.readyState === 4) {
-              let json_data = JSON.parse(xhr.responseText)
-              let new_snip_file_name = json_data.id + '.png'
-              snip_list.push(new_snip_file_name)
+              let jsonData = JSON.parse(xhr.responseText)
+              setSnipId(`${jsonData.id}.png`)
+              if (key === '2') {
+                resetCanvasData()
+              }
             }
           }
 
           xhr.send(data)
-          if (event.key === '2') {
-            this.props.canvasDataReset(false)
-          }
-        } else if (logging) {
-          console.log('Error with snip image prompt')
         }
-      } else if (event.key === '3') {
-        //Restart
-        this.props.canvasDataReset(false)
+      } else if (key === '3') {
+        resetCanvasData()
       }
-    } else if (this.props.snip_prompt_index === 4) {
-      if (event.key === '1') {
-        //Create click_image action
-        this.create_action('click_image')
-        //Clear data
-        this.props.canvasDataReset(false)
-      } else if (event.key === '2') {
-        //Create move_to_image action
-        this.create_action('move_to_image')
-        //Clear data
-        this.props.canvasDataReset(false)
-      } else if (event.key === '3') {
-        //Create move_to_image action
-        this.capture_screen_data('store_value')
-        //Clear data
-        this.props.canvasDataReset(false)
+    } else if (snipPromptIndex === 4) {
+      console.log('Created Action')
+      if (key === '1') {
+        create_action('click_image')
+        resetCanvasData()
+      } else if (key === '2') {
+        create_action('move_to_image')
+        resetCanvasData()
+      } else if (key === '3') {
+        capture_screen_data()
+        resetCanvasData()
       }
-    } else if (
-      this.state.x >= 0 &&
-      this.state.x <= this.props.screen_width &&
-      this.state.y >= 0 &&
-      this.state.y <= this.props.screen_height
-    ) {
-      if (this.props.streaming && this.props.recording) {
-        this.props.canvasDataSet('KEY_PRESSED', String(event.key))
-        this.create_action('key_pressed')
+    } else if (x >= 0 && x <= screenWidth && y >= 0 && y <= screenHeight) {
+      if (streaming && recording) {
+        create_action('key_pressed', null, null, key)
       }
-      if (
-        !this.props.recording &&
-        this.props.streaming &&
-        this.props.remote_controlling
-      ) {
-        get_request_api('keypress/' + event.key)
+      if (!recording && streaming && remoteControlling) {
+        get_request_api(`keypress/${key}`)
       }
     }
   }
 
-  handleDeleteAction = (event) => {
-    if (action_list.length > 0) {
+  const handleDeleteAction = (event) => {
+    if (actionList.length > 0) {
       const id = event.target.name
       if (logging) {
         console.log('Delete action:' + id)
       }
-      let index = 0
-      for (let i = 0; i < action_list.length; i++) {
-        if (action_list[i].id === id) {
-          index = i
-          break
-        }
-      }
-      action_list.splice(index, 1)
+      setActionList(actionList.filter((action) => action.id !== id))
       get_request_api('delete-action/' + id)
     }
   }
 
-  componentDidMount() {
-    window.document.addEventListener('keyup', this.handleKeyPress)
-  }
-  componentWillUnmount() {
-    document.removeEventListener('keyup', this.handleKeyPress, false)
-  }
+  useEffect(() => {
+    window.document.addEventListener('keyup', handleKeyPress)
 
-  render() {
-    return (
-      <div onMouseMove={this.handleMouseMove} onMouseDown={this.handleClick}>
+    return () => {
+      document.removeEventListener('keyup', handleKeyPress, false)
+    }
+  })
+
+  return (
+    <>
+      <div onMouseMove={handleMouseMove} onMouseDown={handleClick}>
         <div className='canvas--group'>
           <div className='canvas--view'>
             <Canvas
-              height={this.props.screen_height * this.props.screen_y_scale}
-              width={this.props.screen_width * this.props.screen_x_scale}
-              screen_fps={this.props.screen_fps}
-              screen_x_scale={this.props.screen_x_scale}
-              screen_y_scale={this.props.screen_y_scale}
-              snip_frame={this.props.snip_frame}
-              snip_x1={this.props.snip_x1}
-              snip_x2={this.props.snip_x2}
-              snip_y1={this.props.snip_y1}
-              snip_y2={this.props.snip_y2}
-              streaming={this.props.streaming}
+              snipFrame={snipFrame}
+              streaming={streaming}
+              x1={x1}
+              y1={y1}
+              x2={x2}
+              y2={y2}
             />
-            <CanvasConsole />
+            <CanvasConsole snipPromptIndex={snipPromptIndex} />
           </div>
           <div className='canvas--toolbox'>
             <SideBar
-              lastActionId={action_list.at(-1)?.id}
-              handleDeleteAction={this.handleDeleteAction}
+              handleDeleteAction={handleDeleteAction}
+              lastActionId={actionList.at(-1)?.id}
+              mouseMode={mouseMode}
+              setMouseMode={setMouseMode}
+              snipFrame={snipFrame}
+              setSnipFrame={setSnipFrame}
+              setSnipPromptIndex={setSnipPromptIndex}
+              setStartMouseDrag={setStartMouseDrag}
+              resetCanvasData={resetCanvasData}
             />
           </div>
         </div>
-        <div className='actions--section'>
-          <h2>Task</h2>
-          <input
-            onChange={(e) =>
-              this.setState({
-                task_id: e.target.value,
-              })
-            }
-            placeholder='Enter task name'
-          />
-          <button onMouseDown={this.handleSaveTask}>Save</button>
-          <button onMouseDown={this.handleNewTask}>New</button>
-          {!this.props.playing_back && (
-            <button onMouseDown={this.handlePlayTask}>Start Task</button>
-          )}
-          {this.props.playing_back && 'Task Playing'}
-          <h3>Task actions</h3>
-          <table>
-            <tbody>
-              <tr>
-                <th>Function</th>
-                <th>Parameters</th>
-                <th>Delete</th>
-              </tr>
-              {action_list.map((block) => (
-                <ActionContainer
-                  key={`${block.id}-component`}
-                  block={block}
-                  event_func={this.handleDeleteAction}
-                />
-              ))}
-            </tbody>
-          </table>
-        </div>
       </div>
-    )
-  }
+      <div className='actions--section'>
+        <h2>Task</h2>
+        <input
+          onChange={(e) => setTaskId(e.target.value)}
+          placeholder='Enter task name'
+        />
+        <button onMouseDown={handleSaveTask}>Save</button>
+        <button onMouseDown={handleNewTask}>New</button>
+        {!playingTask && (
+          <button onMouseDown={handlePlayTask}>Start Task</button>
+        )}
+        {playingTask && 'Task Playing'}
+        <h3>Task actions</h3>
+        <table>
+          <tbody>
+            <tr>
+              <th>Function</th>
+              <th>Parameters</th>
+              <th>Delete</th>
+            </tr>
+            {actionList.map((action) => (
+              <Action
+                key={action.id}
+                block={action}
+                deleteAction={handleDeleteAction}
+              />
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
+  )
 }
-
-const mapStateToProps = (state) => {
-  return {
-    //Controls
-    playing_back: state.controls.playing_back,
-    recording: state.controls.recording,
-    remote_controlling: state.controls.remote_controlling,
-    streaming: state.controls.streaming,
-    mouse_mode: state.controls.mouse_mode,
-    //CanvasData
-    delta_time: state.canvasData.delta_time,
-    key_pressed: state.canvasData.key_pressed,
-    screen_fps: state.canvasData.screen_fps,
-    screen_width: state.canvasData.screen_width,
-    screen_height: state.canvasData.screen_height,
-    screen_timer_max: state.canvasData.screen_timer_max,
-    screen_x_scale: state.canvasData.screen_x_scale,
-    screen_y_scale: state.canvasData.screen_y_scale,
-    snip_frame: state.canvasData.snip_frame,
-    snip_prompt_index: state.canvasData.snip_prompt_index,
-    snip_x1: state.canvasData.snip_x1,
-    snip_x2: state.canvasData.snip_x2,
-    snip_y1: state.canvasData.snip_y1,
-    snip_y2: state.canvasData.snip_y2,
-    snipping_image: state.canvasData.snipping_image,
-    //Settings
-    random_enabled: state.settings.random_enabled,
-    random_mouse_delay: state.settings.random_mouse_delay,
-    random_mouse_path: state.settings.random_mouse_path,
-    random_mouse_position: state.settings.random_mouse_position,
-    random_mouse_max_delay: state.settings.random_mouse_max_delay,
-    random_mouse_range: state.settings.random_mouse_range,
-  }
-}
-
-export default connect(mapStateToProps, {
-  controlToggle,
-  canvasDataSet,
-  canvasSetCoords,
-  canvasDataReset,
-  settingsValueSet,
-})(Recorder)

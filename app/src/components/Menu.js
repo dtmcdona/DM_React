@@ -1,66 +1,105 @@
 import MenuButton from './MenuButton'
 import MenuInput from './MenuInput'
-import { connect } from 'react-redux'
-import { settingsValueSet } from '../actions'
 import React from 'react'
+import { useSettingsContext } from '../contexts/settings'
 
-class Menu extends React.Component {
-  render() {
-    return (
-      <div className='menu--section'>
-        <form>
-          <h2>Menu</h2>
-          <table>
-            <tbody>
-              {Object.entries(this.props.settings).map(([k, v]) => {
-                const temp = k.replaceAll('_', ' ')
-                let captialized_key =
-                  temp.charAt(0).toUpperCase() + temp.slice(1)
-                let input_type = 'text'
-                if (typeof v === 'number') {
-                  input_type = 'number'
-                } else if (typeof v === 'boolean') {
-                  return (
-                    <tr key={k}>
-                      <th>
-                        <label>{captialized_key}</label>
-                      </th>
-                      <th>
-                        <MenuButton
-                          key_name={k}
-                          value={v}
-                          updateSettingValue={this.props.settingsValueSet}
-                        />
-                      </th>
-                    </tr>
-                  )
-                }
-                return (
-                  <tr key={k}>
-                    <th>
-                      <label>{captialized_key}</label>
-                    </th>
-                    <th>
-                      <MenuInput
-                        key_name={k}
-                        value={v}
-                        type={input_type}
-                        updateSettingValue={this.props.settingsValueSet}
-                      />
-                    </th>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </form>
-      </div>
-    )
-  }
+export default function Menu() {
+  const {
+    randomEnabled,
+    setRandomEnabled,
+    randomMouseDelay,
+    setRandomMouseDelay,
+    randomMousePath,
+    setRandomMousePath,
+    randomMousePosition,
+    setRandomMousePosition,
+    randomMouseMaxDelay,
+    setRandomMouseMaxDelay,
+    randomMouseRange,
+    setRandomMouseRange,
+  } = useSettingsContext()
+
+  return (
+    <div className='menu--section'>
+      <form>
+        <h2>Menu</h2>
+        <table>
+          <tbody>
+            <tr key='randomEnabled'>
+              <th>
+                <label>Random enabled</label>
+              </th>
+              <th>
+                <MenuButton
+                  name='randomEnabled'
+                  value={randomEnabled}
+                  setValue={setRandomEnabled}
+                />
+              </th>
+            </tr>
+            <tr key='randomMousePath'>
+              <th>
+                <label>Random mouse path</label>
+              </th>
+              <th>
+                <MenuButton
+                  name='randomMousePath'
+                  value={randomMousePath}
+                  setValue={setRandomMousePath}
+                />
+              </th>
+            </tr>
+            <tr key='randomMousePosition'>
+              <th>
+                <label>Random mouse position</label>
+              </th>
+              <th>
+                <MenuButton
+                  name='randomMousePosition'
+                  value={randomMousePosition}
+                  setValue={setRandomMousePosition}
+                />
+              </th>
+            </tr>
+            <tr key='randomMouseRange'>
+              <th>
+                <label>Random mouse range</label>
+              </th>
+              <th>
+                <MenuInput
+                  name='randomMouseRange'
+                  value={randomMouseRange}
+                  setValue={setRandomMouseRange}
+                />
+              </th>
+            </tr>
+            <tr key='randomMouseDelay'>
+              <th>
+                <label>Random mouse delay</label>
+              </th>
+              <th>
+                <MenuButton
+                  name='randomMouseDelay'
+                  value={randomMouseDelay}
+                  setValue={setRandomMouseDelay}
+                />
+              </th>
+            </tr>
+            <tr key='randomMouseMaxDelay'>
+              <th>
+                <label>Random mouse max delay</label>
+              </th>
+              <th>
+                <MenuInput
+                  name='randomMouseMaxDelay'
+                  value={randomMouseMaxDelay}
+                  setValue={setRandomMouseMaxDelay}
+                />
+              </th>
+            </tr>
+          </tbody>
+        </table>
+      </form>
+    </div>
+  )
 }
-
-const mapStateToProps = (state) => {
-  return { settings: state.settings }
-}
-
-export default connect(mapStateToProps, { settingsValueSet })(Menu)
