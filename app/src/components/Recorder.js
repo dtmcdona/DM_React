@@ -200,6 +200,26 @@ export default function Recorder() {
     xhr.send(data)
   }
 
+  const handleLoadTask = () => {
+    let url = `${base_url}load-task/${taskId}`
+
+    let xhr = new XMLHttpRequest()
+    xhr.open('GET', url)
+
+    xhr.setRequestHeader('Accept', 'application/json')
+    xhr.setRequestHeader('Content-Type', 'application/json')
+    xhr.setRequestHeader('Access-Control-Allow-Origin', '*')
+
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4) {
+        const jsonData = JSON.parse(xhr.responseText)
+        setActionList(jsonData?.actions || [])
+      }
+    }
+
+    xhr.send()
+  }
+
   const handleNewTask = async () => {
     setTaskId('')
   }
@@ -398,6 +418,7 @@ export default function Recorder() {
           placeholder='Enter task name'
         />
         <button onMouseDown={handleSaveTask}>Save</button>
+        <button onMouseDown={handleLoadTask}>Load</button>
         <button onMouseDown={handleNewTask}>New</button>
         {!playingTask && (
           <button onMouseDown={handlePlayTask}>Start Task</button>
