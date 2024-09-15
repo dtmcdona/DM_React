@@ -10,7 +10,7 @@ import {
   screenYScale,
 } from './constants'
 import { getTimeDelta } from 'helpers'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useReducer, useState } from 'react'
 import { useControlsContext } from '../contexts/controls'
 import Action from './Action'
 import { useSettingsContext } from '../contexts/settings'
@@ -28,12 +28,23 @@ const get_request_api = (path) => {
   xhr.send()
 }
 
+function actionListReducer(state, action) {
+  switch (action.type) {
+    case 'append':
+      return [...state, action.newAction]
+    case 'delete':
+      return state.filter((actionElement) => actionElement.id !== action.id)
+    case 'load':
+      return [...action.actionList]
+  }
+}
+
 export default function Recorder() {
   const [x, setX] = useState(0)
   const [y, setY] = useState(0)
   const [taskId, setTaskId] = useState('')
   const [playingTask, setPlayingTask] = useState(false)
-  const [actionList, setActionList] = useState([])
+  const [actionList, setActionList] = useReducer(actionListReducer, [])
   const [actionTimestamp, setActionTimestamp] = useState(Date.now())
   const {
     streaming,
@@ -129,8 +140,8 @@ export default function Recorder() {
     xhr.onreadystatechange = function () {
       if (xhr.readyState === 4) {
         const newAction = JSON.parse(xhr.responseText)
-        if (newAction?.data !== 'No screen objects found') {
-          setActionList([...actionList, newAction])
+        if (newAction?.id) {
+          setActionList({ type: 'append', newAction: newAction })
         }
       }
     }
@@ -151,7 +162,14 @@ export default function Recorder() {
     xhr.onreadystatechange = function () {
       if (xhr.readyState === 4) {
         const newAction = JSON.parse(xhr.responseText)
-        setActionList([...actionList, newAction])
+        const isError = newAction?.data === 'No screen objects found'
+        if (isError && logging) {
+          console.error(
+            'Failed capture_screed_data action: No screen objects found.'
+          )
+        } else if (!isError) {
+          setActionList({ type: 'append', newAction: newAction })
+        }
       }
     }
 
@@ -198,6 +216,27 @@ export default function Recorder() {
     }
 
     xhr.send(data)
+  }
+
+  const handleLoadTask = () => {
+    let url = `${base_url}load-task/${taskId}`
+
+    let xhr = new XMLHttpRequest()
+    xhr.open('GET', url)
+
+    xhr.setRequestHeader('Accept', 'application/json')
+    xhr.setRequestHeader('Content-Type', 'application/json')
+    xhr.setRequestHeader('Access-Control-Allow-Origin', '*')
+
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4) {
+        const jsonData = JSON.parse(xhr.responseText)
+        const newActionList = jsonData?.actions || []
+        setActionList({ type: 'load', actionList: newActionList })
+      }
+    }
+
+    xhr.send()
   }
 
   const handleNewTask = async () => {
@@ -285,7 +324,7 @@ export default function Recorder() {
     }
   }
 
-  const handleKeyPress = (event) => {
+  const handleKeyPress = async (event) => {
     event.preventDefault()
     const key = String(event.key)
     if (logging) {
@@ -348,16 +387,16 @@ export default function Recorder() {
       if (logging) {
         console.log('Delete action:' + id)
       }
-      setActionList(actionList.filter((action) => action.id !== id))
+      setActionList({ type: 'delete', id: id })
       get_request_api('delete-action/' + id)
     }
   }
 
   useEffect(() => {
-    window.document.addEventListener('keyup', handleKeyPress)
+    window.addEventListener('keyup', handleKeyPress)
 
     return () => {
-      document.removeEventListener('keyup', handleKeyPress, false)
+      window.removeEventListener('keyup', handleKeyPress, false)
     }
   })
 
@@ -398,6 +437,7 @@ export default function Recorder() {
           placeholder='Enter task name'
         />
         <button onMouseDown={handleSaveTask}>Save</button>
+        <button onMouseDown={handleLoadTask}>Load</button>
         <button onMouseDown={handleNewTask}>New</button>
         {!playingTask && (
           <button onMouseDown={handlePlayTask}>Start Task</button>
