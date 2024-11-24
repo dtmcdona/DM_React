@@ -1,4 +1,4 @@
-import React, {createContext, useContext, useMemo, useState} from 'react'
+import React, { createContext, useContext, useMemo, useState } from 'react'
 
 export const ControlsContext = createContext(null)
 
@@ -27,9 +27,7 @@ export function ControlsContextProvider({ children }) {
   )
 
   return (
-    <ControlsContext.Provider
-      value={value}
-    >
+    <ControlsContext.Provider value={value}>
       {children}
     </ControlsContext.Provider>
   )

@@ -1,5 +1,5 @@
-.App {
-  text-align: center;
+body {
+  background-color: #24435c;
 }
 
 nav {
@@ -18,6 +18,40 @@ nav {
 canvas {
   box-shadow: rgba(50, 50, 93, 0.25) 0px 30px 60px -12px,
     rgba(0, 0, 0, 0.3) 0px 18px 36px -18px;
+}
+
+button,
+fieldset,
+input,
+legend,
+select,
+textarea {
+  text-align: center;
+  padding: 5px 10px 5px 10px;
+  margin: 4px 8px 4px 8px;
+  border-radius: 16px;
+  color: #61dafb;
+  background-color: #284b67;
+  border: 1px solid rgba(97, 218, 251, 0.25);
+  text-shadow: 2px 2px 3px rgba(0, 0, 57, 0.25);
+}
+
+h4 {
+  text-align: left;
+}
+
+li {
+  padding: 2px;
+  list-style-type: none;
+  overflow: hidden;
+  border: none;
+  border-radius: 10px;
+  width: 60%;
+}
+
+ul {
+  padding: 0px;
+  margin: 0px;
 }
 
 .canvas--group {
@@ -41,7 +75,7 @@ canvas {
   border: 1px solid rgba(97, 218, 251, 0.25);
   text-shadow: 2px 2px 3px rgba(0, 0, 57, 0.25);
   border-radius: 16px;
-  padding-left: 10px;
+  padding: 10px;
 }
 
 .nav--options {
@@ -68,76 +102,57 @@ canvas {
   text-shadow: 2px 2px 3px rgba(0, 0, 57, 0.25);
 }
 
-body {
-  background-color: #24435c;
-}
-
-.menu--section {
-  width: 100%;
-  height: 100vh;
-  display: flex;
-  justify-content: left;
-  align-items: left;
-  text-shadow: 2px 2px 3px rgba(0, 0, 57, 0.25);
-}
-
-table {
+.menu--list,
+.action--list {
+  border-radius: 8px;
   box-shadow: rgba(50, 50, 93, 0.25) 0px 30px 60px -12px,
     rgba(0, 0, 0, 0.3) 0px 18px 36px -18px;
   width: 960px;
-  height: 200px;
+  height: auto;
+  padding: 5px 10px 5px 10px;
+  margin: 16px 8px 16px 8px;
 }
 
-th {
-  border-radius: 16px;
-  border-bottom: 1px solid #24435c;
-  text-shadow: 2px 2px 3px rgba(0, 0, 57, 0.25);
-}
-
-tr {
+.menu--row,
+.action--row {
   border-radius: 16px;
   box-shadow: rgba(50, 50, 93, 0.25) 0px 12px 24px -12px inset,
     rgba(27, 51, 70, 0.9) 0px 12px 24px -12px inset;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding-right: 40px;
+  padding-left: 40px;
+  width: auto;
 }
 
-td {
-  text-align: center;
+.action--section {
+  display: flex;
+  flex-direction: row;
+  padding: 10px 15px 10px 15px;
+  min-width: 200px;
 }
 
-h4 {
+.action--condition {
+  display: flex;
+  flex-direction: column;
+  width: 250px;
+}
+
+.action--function {
+  display: flex;
+  flex-grow: 2;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.action--button {
+  width: 100px;
+  justify-content: end;
+}
+
+.action--form {
   text-align: left;
-}
-
-li {
-  padding: 2px;
-  list-style-type: none;
-  overflow: hidden;
-  border: none;
-  border-radius: 10px;
-  width: 60%;
-}
-
-ul {
-  padding: 0px;
-  margin: 0px;
-}
-
-button,
-fieldset,
-input,
-legend,
-select,
-textarea {
-  text-align: center;
-  padding-left: 8px;
-  padding-right: 10px;
-  border-radius: 16px;
-  color: #61dafb;
-  background-color: #284b67;
-  border: 1px solid rgba(97, 218, 251, 0.25);
-  text-shadow: 2px 2px 3px rgba(0, 0, 57, 0.25);
-}
-
-form {
-  text-align: left;
+  flex-grow: 1;
+  width: auto;
 }
