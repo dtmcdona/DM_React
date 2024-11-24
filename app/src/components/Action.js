@@ -128,11 +128,11 @@ function Action({ block, deleteAction }) {
   }
 
   return (
-    <tr>
-      <th>
-        <form onSubmit={handleSubmit}>
-          {action.function === 'capture_screen_data' && (
-            <>
+    <div className='action--row'>
+      <form onSubmit={handleSubmit} className='action--form'>
+        <div className='action--section'>
+          {(action.function === 'capture_screen_data' && (
+            <div className='action--condition'>
               Condition:
               <div className='select-container'>
                 <select
@@ -213,104 +213,107 @@ function Action({ block, deleteAction }) {
                   />
                 </div>
               )}
-            </>
-          )}
-          Action function:
-          <div className='select-container'>
-            <select value={action.function} onChange={handleChangeFunction}>
-              {action_constants.action_functions.map((option) => (
-                <option
-                  key={`${action.id}-${option.label}`}
-                  value={option.value}
-                >
-                  {option.label}
-                </option>
-              ))}
-            </select>
+            </div>
+          )) || <div className='action--condition'></div>}
+          <div className='action--function'>
+            Action function:
+            <div className='select-container'>
+              <select value={action.function} onChange={handleChangeFunction}>
+                {action_constants.action_functions.map((option) => (
+                  <option
+                    key={`${action.id}-${option.label}`}
+                    value={option.value}
+                  >
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {action.function === 'key_pressed' && (
+              <div className='input-container'>
+                Keyboard
+                <input
+                  type='text'
+                  size='10'
+                  value={action.key_pressed}
+                  onChange={(e) => setAction({ key_pressed: e.target.value })}
+                />
+              </div>
+            )}
+            {position_functions.includes(action.function) && (
+              <div className='input-container'>
+                {point_functions.includes(action.function)
+                  ? '(x,y): ('
+                  : 'Top left (x,y): ('}
+                <input
+                  type='text'
+                  size='10'
+                  value={action.x1}
+                  onChange={(e) => setAction({ x1: e.target.value })}
+                />
+                ,
+                <input
+                  type='text'
+                  size='10'
+                  value={action.y1}
+                  onChange={(e) => setAction({ y1: e.target.value })}
+                />
+                )
+              </div>
+            )}
+            {region_functions.includes(action.function) && (
+              <div className='input-container'>
+                {action.function === 'drag_to'
+                  ? 'to (x,y):'
+                  : 'Bottom right (x,y): ('}
+                <input
+                  type='text'
+                  size='10'
+                  value={action.x2}
+                  onChange={(e) => setAction({ x2: e.target.value })}
+                />
+                ,
+                <input
+                  type='text'
+                  size='10'
+                  value={action.y2}
+                  onChange={(e) => setAction({ y2: e.target.value })}
+                />
+                )
+              </div>
+            )}
+            Time delay:
+            <div className='input-container'>
+              <input
+                type='text'
+                size='10'
+                value={action.time_delay}
+                onChange={(e) => setAction({ time_delay: e.target.value })}
+                required
+              />
+            </div>
+            {image_functions.includes(action.function) && (
+              <div className='input-container'>
+                Images:
+                <input
+                  type='text'
+                  value={action.images}
+                  onChange={(e) => setAction({ images: e.target.value })}
+                />
+              </div>
+            )}
           </div>
-          {action.function === 'key_pressed' && (
-            <div className='input-container'>
-              Keyboard
-              <input
-                type='text'
-                size='10'
-                value={action.key_pressed}
-                onChange={(e) => setAction({ key_pressed: e.target.value })}
-              />
-            </div>
-          )}
-          {position_functions.includes(action.function) && (
-            <div className='input-container'>
-              {point_functions.includes(action.function)
-                ? '(x,y):'
-                : 'Top left (x,y): ('}
-              <input
-                type='text'
-                size='10'
-                value={action.x1}
-                onChange={(e) => setAction({ x1: e.target.value })}
-              />
-              ,
-              <input
-                type='text'
-                size='10'
-                value={action.y1}
-                onChange={(e) => setAction({ y1: e.target.value })}
-              />
-              )
-            </div>
-          )}
-          {region_functions.includes(action.function) && (
-            <div className='input-container'>
-              {action.function === 'drag_to'
-                ? 'to (x,y):'
-                : 'Bottom right (x,y): ('}
-              <input
-                type='text'
-                size='10'
-                value={action.x2}
-                onChange={(e) => setAction({ x2: e.target.value })}
-              />
-              ,
-              <input
-                type='text'
-                size='10'
-                value={action.y2}
-                onChange={(e) => setAction({ y2: e.target.value })}
-              />
-              )
-            </div>
-          )}
-          Time delay:
-          <div className='input-container'>
-            <input
-              type='text'
-              size='10'
-              value={action.time_delay}
-              onChange={(e) => setAction({ time_delay: e.target.value })}
-              required
-            />
+          <div className='action--button'>
+            <button>Update</button>
           </div>
-          {image_functions.includes(action.function) && (
-            <div className='input-container'>
-              Images:
-              <input
-                type='text'
-                value={action.images}
-                onChange={(e) => setAction({ images: e.target.value })}
-              />
-            </div>
-          )}
-          <button>Update</button>
-        </form>
-      </th>
-
-      <th>
-        <button name={block.id} onMouseDown={deleteAction}>
-          Delete
-        </button>
-      </th>
-    </tr>
+          <div className='action--button'>
+            <button name={block.id} onMouseDown={deleteAction}>
+              Delete
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
   )
 }
 

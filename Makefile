@@ -2,8 +2,8 @@ init:
 	cd app && yarn start
 
 format:
-	npx prettier --write .
-	npx prettier --check .
+	cd app && yarn prettier --write src
+	cd app && yarn prettier --check .
 
 setup:
 	cd app && yarn install

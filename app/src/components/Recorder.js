@@ -444,22 +444,15 @@ export default function Recorder() {
         )}
         {playingTask && 'Task Playing'}
         <h3>Task actions</h3>
-        <table>
-          <tbody>
-            <tr>
-              <th>Function</th>
-              <th>Parameters</th>
-              <th>Delete</th>
-            </tr>
-            {actionList.map((action) => (
-              <Action
-                key={action.id}
-                block={action}
-                deleteAction={handleDeleteAction}
-              />
-            ))}
-          </tbody>
-        </table>
+        <div className='action--list'>
+          {actionList.map((action) => (
+            <Action
+              key={action.id}
+              block={action}
+              deleteAction={handleDeleteAction}
+            />
+          ))}
+        </div>
       </div>
     </>
   )
