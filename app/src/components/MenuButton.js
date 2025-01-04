@@ -5,7 +5,12 @@ function MenuButton({ name, value, setValue }) {
   return useMemo(
     () => (
       <div key={`${name}Input`}>
-        <button name={name} type='button' onClick={updateValue}>
+        <button
+          name={name}
+          type='button'
+          className={value ? 'button--active' : ''}
+          onClick={updateValue}
+        >
           {value ? 'On' : 'Off'}
         </button>
       </div>
